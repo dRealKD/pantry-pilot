@@ -56,18 +56,16 @@ const SEED_ITEMS = [
   { id: 'item_6', name: 'Tomatoes', category: 'Vegetables', vendor: 'Zepto', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: 'kg' },
   { id: 'item_7', name: 'Onions', category: 'Vegetables', vendor: 'BigBasket', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: 'kg' },
   { id: 'item_10', name: 'Curry Cut Chicken', category: 'Meat', vendor: 'Meatigo', availableVendors: ['Meatigo', 'Licious', 'BigBasket'], frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: 'g' },
-  // ADD NEW ITEMS HERE...
 ];
 
 // --- FIREBASE INIT ---
-// IMPORTANT: WHEN DEPLOYING, REPLACE THIS SECTION WITH YOUR OWN FIREBASE CONFIG
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-  apiKey: "AIzaSyCzvNJ03g-VqQ7TJnh-qlPs1Y0IoLgE8k0",
-  authDomain: "mypantrypilot-ed34b.firebaseapp.com",
-  projectId: "mypantrypilot-ed34b",
-  storageBucket: "mypantrypilot-ed34b.firebasestorage.app",
-  messagingSenderId: "440159001492",
-  appId: "1:440159001492:web:cf993628cf44f053218d81"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -92,7 +90,7 @@ export default function GroceryApp() {
   const [items, setItems] = useState([]);
   const [cart, setCart] = useState([]);
   const [activeTab, setActiveTab] = useState('pantry');
-  const [isAdminOpen, setIsAdminOpen] = useState(false); // Developer Menu Toggle
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // UI States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -136,14 +134,12 @@ export default function GroceryApp() {
   useEffect(() => {
     if (!user) return;
 
-    // Listen to PANTRY items
     const pantryRef = collection(db, 'artifacts', appId, 'users', user.uid, 'pantry');
     const unsubscribePantry = onSnapshot(pantryRef, (snapshot) => {
       const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setItems(fetchedItems);
     }, (error) => console.error("Pantry sync error:", error));
 
-    // Listen to CART items
     const cartRef = collection(db, 'artifacts', appId, 'users', user.uid, 'cart');
     const unsubscribeCart = onSnapshot(cartRef, (snapshot) => {
       const fetchedCart = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -174,7 +170,6 @@ export default function GroceryApp() {
 
         const batch = writeBatch(db);
         itemsToAutoReceive.forEach(item => {
-             // For auto-cleanup, assume default quantity was received
              const stats = calculateReceivedStats(item, now, item.quantity, item.unit);
              const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', item.id);
              batch.update(docRef, stats);
@@ -348,8 +343,20 @@ export default function GroceryApp() {
     }
   };
 
+  // --- NEW: Name-Based Uniqueness Check ---
   const handleCreateNewItem = async () => {
     if (!user) return;
+
+    const normalizedName = newItem.name.trim().toLowerCase();
+
+    // Check if name already exists (case-insensitive) in local state (which matches DB)
+    const exists = items.some(item => item.name.trim().toLowerCase() === normalizedName);
+
+    if (exists) {
+        alert(`Item "${newItem.name}" already exists in your pantry!`);
+        return; // Stop execution
+    }
+
     const newItemId = `custom_${Date.now()}`;
     const newItemObj = {
       ...newItem,
@@ -420,17 +427,19 @@ export default function GroceryApp() {
       }
   };
 
-  // --- BULK IMPORT (Admin Feature) ---
+  // --- NEW: Bulk Sync with Name Checking ---
   const handleBulkSync = async () => {
       if (!user) return;
-      if (!confirm("This will add any missing items from the Code Master List to your Database. Existing items will NOT be overwritten. Continue?")) return;
+      if (!confirm("This will add any missing items (by name) from the Master List to your Database. Existing items will be preserved. Continue?")) return;
 
       const batch = writeBatch(db);
       let count = 0;
 
       SEED_ITEMS.forEach(seedItem => {
-          // Check if item already exists in current state
-          const exists = items.find(i => i.id === seedItem.id);
+          // Check if NAME exists in current DB items (Case-Insensitive)
+          // This prevents adding 'Milk' if 'item_1' (Milk) already exists
+          const exists = items.some(i => i.name.toLowerCase() === seedItem.name.toLowerCase());
+
           if (!exists) {
               const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', seedItem.id);
               batch.set(docRef, seedItem);
@@ -442,7 +451,7 @@ export default function GroceryApp() {
           await batch.commit();
           alert(`Successfully added ${count} new items from Master List.`);
       } else {
-          alert("Database is already up to date with Master List.");
+          alert("Database is already up to date with Master List names.");
       }
       setIsAdminOpen(false);
   };
