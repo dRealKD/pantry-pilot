@@ -63,12 +63,12 @@ const SEED_ITEMS = [
 
 // --- FIREBASE INIT ---
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCzvNJ03g-VqQ7TJnh-qlPs1Y0IoLgE8k0",
+  authDomain: "mypantrypilot-ed34b.firebaseapp.com",
+  projectId: "mypantrypilot-ed34b",
+  storageBucket: "mypantrypilot-ed34b.firebasestorage.app",
+  messagingSenderId: "440159001492",
+  appId: "1:440159001492:web:cf993628cf44f053218d81",
 };
 
 const app = initializeApp(firebaseConfig);
