@@ -21,7 +21,11 @@ import {
   Settings,
   Loader2,
   RefreshCw,
-  User
+  User,
+  Package,
+  ClipboardCheck,
+  XCircle,
+  Search
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -46,19 +50,38 @@ import {
 
 // --- CONFIGURATION ---
 const VENDORS = ['BigBasket', 'Swiggy Instamart', 'Meatigo', 'Zepto', 'Blinkit', 'Amazon Fresh', 'Blue Tokai', 'Amul'];
-const UNITS = ['kg(s)', 'gm(s)', 'ltr', 'ml', 'pcs', 'pack', 'loaf', 'bunch', 'bottles'];
-const GENERIC_GROCERY_APPS = ['BigBasket', 'Swiggy Instamart', 'Zepto', 'Blinkit', 'Amazon Fresh'];
+const UNITS = ['Kg', 'gm', 'L', 'ml', 'pcs', 'packet', 'loaf', 'bunch', 'bottles'];
+const GENERIC_GROCERY_APPS = ['BigBasket', 'Swiggy Instamart', 'Meatigo', 'Zepto', 'Blinkit', 'Amazon Fresh'];
 const CATEGORIES = ['Vegetables', 'Fruits', 'Dairy', 'Meat', 'Bakery', 'Grains', 'Cooking', 'Beverages', 'Household'];
 
 // --- MASTER LIST ---
 const SEED_ITEMS = [
-  { id: 'item_1', name: 'Full Cream Milk', category: 'Dairy', vendor: 'Swiggy Instamart', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: 'L' },
-  { id: 'item_2', name: 'Curd/Dahi', category: 'Dairy', vendor: 'BigBasket', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 400, unit: 'g' },
-  { id: 'item_3', name: 'Eggs (12 pack)', category: 'Dairy', vendor: 'Zepto', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: 'pack' },
-  { id: 'item_4', name: 'Sourdough Bread', category: 'Bakery', vendor: 'BigBasket', availableVendors: ['BigBasket', 'The Baker\'s Dozen', 'Amazon Fresh'], frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: 'loaf' },
-  { id: 'item_6', name: 'Tomatoes', category: 'Vegetables', vendor: 'Zepto', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: 'kg' },
-  { id: 'item_7', name: 'Onions', category: 'Vegetables', vendor: 'BigBasket', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: 'kg' },
-  { id: 'item_10', name: 'Curry Cut Chicken', category: 'Meat', vendor: 'Meatigo', availableVendors: ['Meatigo', 'Licious', 'BigBasket'], frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: 'g' },
+  { id: 'custom_1764252000001', name: 'Chicken Bites (Boneless)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 250, unit: 'g' },
+  { id: 'custom_1764252000002', name: 'Chicken Soup Pieces (Frozen)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: 'g' },
+  { id: 'custom_1764252000003', name: 'Chicken Mince', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000004', name: 'Chicken Curry Cut (Skinless)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000005', name: 'Chicken Boneless Breast', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000006', name: 'Chicken Boneless Thigh', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000007', name: 'Chicken Leg', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000008', name: 'Chicken Thigh (Bone In)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000009', name: 'Chicken Smoked Ham', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: 'g' },
+  { id: 'custom_1764252000010', name: 'Chicken Breakfast Sausage', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
+  { id: 'custom_1764252000011', name: 'Chicken Seekh Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: 'g' },
+  { id: 'custom_1764252000012', name: 'Chicken Shammi Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
+  { id: 'custom_1764252000013', name: 'Chicken Pepperoni', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 100, unit: 'g' },
+  { id: 'custom_1764252000014', name: 'Chicken Galouti Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
+  { id: 'custom_1764252000015', name: 'Chicken Breast Bacon', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
+  { id: 'custom_1764252000016', name: 'Mutton Curry Cut (Rajastan)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000017', name: 'Mutton Sheekh Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: 'g' },
+  { id: 'custom_1764252000018', name: 'Mutton Shammi Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
+  { id: 'custom_1764252000019', name: 'Premium Mutton Boneless (Rajasthan)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000020', name: 'Mutton Mince (Rajasthan)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
+  { id: 'custom_1764252000021', name: 'Pork Mince', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 250, unit: 'g' },
+  { id: 'custom_1764252000022', name: 'Breakfast Bacon', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 300, unit: 'g' },
+  { id: 'custom_1764252000023', name: 'Streaky Bacon', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: 'g' },
+  { id: 'custom_1764252000024', name: 'Premium Pork Pepperoni', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 100, unit: 'g' },
+  { id: 'custom_1764252000025', name: 'Pork Smoked Ham', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
+  { id: 'custom_1764252000026', name: 'Double Smoked Pork Ham', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: 'g' },
 ];
 
 // --- FIREBASE INIT ---
@@ -94,15 +117,29 @@ export default function GroceryApp() {
   const [activeTab, setActiveTab] = useState('pantry');
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [dbError, setDbError] = useState(null); // Track DB errors
+  const [dbError, setDbError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // UI States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddToCartModalOpen, setIsAddToCartModalOpen] = useState(false);
   const [itemToAdd, setItemToAdd] = useState(null);
-  const [addConfig, setAddConfig] = useState({ qty: 1, unit: 'pcs', vendor: '' });
 
-  // Scanning States
+  const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
+  const [itemToReceive, setItemToReceive] = useState(null);
+  const [receiveConfig, setReceiveConfig] = useState({
+      packCount: 1,
+      packetSize: 1,
+      unit: 'pcs'
+  });
+
+  const [addConfig, setAddConfig] = useState({
+      packCount: 1,
+      packetSize: 1,
+      unit: 'pcs',
+      vendor: ''
+  });
+
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState('camera');
   const [scannedData, setScannedData] = useState([]);
@@ -191,7 +228,6 @@ export default function GroceryApp() {
              const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', item.id);
              batch.update(docRef, stats);
         });
-        // Catch cleanup errors silently to not annoy user
         batch.commit().catch(e => console.error("Auto-cleanup failed", e));
     };
 
@@ -237,7 +273,9 @@ export default function GroceryApp() {
         frequencyDays: estimatedDays,
         orderCount: newOrderCount,
         isOrdered: false,
-        orderPlacedAt: null
+        orderPlacedAt: null,
+        orderedPackCount: null,
+        orderedPacketSize: null
     };
   };
 
@@ -251,7 +289,7 @@ export default function GroceryApp() {
             daysSinceLastOrder: 0,
             stockStatus: 'On the Way',
             urgencyRatio: -1,
-            isOverdue: false,
+            isOverdue: false, // Ensures 'Urgent' status is removed if ordered
             hasPattern: true
          };
       }
@@ -295,7 +333,7 @@ export default function GroceryApp() {
         stockStatus,
         urgencyRatio: percentConsumed,
         predictedDuration: Math.round(predictedDuration),
-        isOverdue: percentConsumed >= 1.0,
+        isOverdue: percentConsumed >= 1.0, // Determines 'Urgent' visual
         hasPattern: !!item.lastOrdered
       };
     });
@@ -322,8 +360,10 @@ export default function GroceryApp() {
   const initiateAddToCart = (item) => {
     if (cart.find(c => c.id === item.id)) return;
     setItemToAdd(item);
+
     setAddConfig({
-        qty: item.quantity || 1,
+        packCount: 1,
+        packetSize: item.quantity || 1,
         unit: item.unit || 'pcs',
         vendor: item.vendor || 'BigBasket'
     });
@@ -333,11 +373,15 @@ export default function GroceryApp() {
   const confirmAddToCart = async () => {
     if (!itemToAdd || !user) return;
 
+    const totalQty = addConfig.packetSize * addConfig.packCount;
+
     const finalItem = {
         ...itemToAdd,
-        quantity: addConfig.qty,
+        packCount: addConfig.packCount,
+        packetSize: addConfig.packetSize,
         unit: addConfig.unit,
-        vendor: addConfig.vendor
+        vendor: addConfig.vendor,
+        quantity: totalQty
     };
 
     try {
@@ -395,9 +439,7 @@ export default function GroceryApp() {
         setIsAddModalOpen(false);
         setNewItem({ name: '', category: 'Vegetables', vendor: 'BigBasket', frequencyDays: 7, quantity: 1, unit: 'pcs' });
     } catch (e) {
-        // EXPLICIT ERROR ALERT
         alert(`Failed to save item: ${e.message}\n\nCheck your database rules/permissions.`);
-        console.error("Error creating item", e);
     }
   };
 
@@ -407,7 +449,12 @@ export default function GroceryApp() {
     const now = new Date().toISOString();
 
     const orderText = `*${vendorName} Order List:*\n\n` +
-        itemsToCheckout.map(item => `• ${item.name} - ${item.quantity} ${item.unit}`).join('\n');
+        itemsToCheckout.map(item => {
+            if (item.packCount > 1) {
+                return `• ${item.name} - ${item.packCount} packs x ${item.packetSize} ${item.unit}`;
+            }
+            return `• ${item.name} - ${item.quantity} ${item.unit}`;
+        }).join('\n');
 
     try {
         await navigator.clipboard.writeText(orderText);
@@ -421,41 +468,86 @@ export default function GroceryApp() {
     const batch = writeBatch(db);
     itemsToCheckout.forEach(item => {
         const pantryRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', item.id);
-        batch.update(pantryRef, { isOrdered: true, orderPlacedAt: now });
+        batch.update(pantryRef, {
+            isOrdered: true,
+            orderPlacedAt: now,
+            quantity: item.quantity,
+            unit: item.unit,
+            orderedPackCount: item.packCount,
+            orderedPacketSize: item.packetSize
+        });
     });
     itemsToCheckout.forEach(item => {
         const cartRef = doc(db, 'artifacts', appId, 'users', user.uid, 'cart', item.id);
         batch.delete(cartRef);
     });
 
-    try {
-        await batch.commit();
-        alert(`Opening WhatsApp...\n\nList also copied to clipboard.`);
-    } catch (e) {
-        alert(`Checkout failed: ${e.message}`);
-    }
+    await batch.commit();
 
+    alert(`Opening WhatsApp...\n\nList also copied to clipboard.`);
     setTimeout(() => {
         setShowNotification(true);
     }, 3000);
   };
 
-  const handleManualReceive = async (itemId) => {
-      if (!user) return;
-      const today = new Date();
-      const item = items.find(i => i.id === itemId);
-      if (!item) return;
+  // --- MANUAL RECEIVE LOGIC ---
+  const initiateManualReceive = (item) => {
+      setItemToReceive(item);
+      setReceiveConfig({
+          packCount: item.orderedPackCount || 1,
+          packetSize: item.orderedPacketSize || item.quantity || 1,
+          unit: item.unit || 'pcs'
+      });
+      setIsReceiveModalOpen(true);
+  };
 
-      const updates = calculateReceivedStats(item, today, item.quantity, item.unit);
+  const confirmManualReceive = async () => {
+      if (!user || !itemToReceive) return;
+
+      const today = new Date();
+      const totalReceivedQty = receiveConfig.packCount * receiveConfig.packetSize;
+
+      const updates = calculateReceivedStats(itemToReceive, today, totalReceivedQty, receiveConfig.unit);
+
+      // Preserve original default packet size/count logic
+      const finalUpdates = {
+          ...updates,
+      };
 
       try {
-          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemId), updates, { merge: true });
+          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemToReceive.id), finalUpdates, { merge: true });
+          setIsReceiveModalOpen(false);
+          setItemToReceive(null);
       } catch (e) {
           alert(`Error receiving item: ${e.message}`);
       }
   };
 
-  // --- BULK SYNC ---
+  const handleNotDelivered = async (itemId) => {
+      if (!user) return;
+      try {
+          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemId), {
+              isOrdered: false,
+              orderPlacedAt: null,
+              orderedPackCount: null,
+              orderedPacketSize: null
+          }, { merge: true });
+      } catch (e) {
+          alert(`Error updating item: ${e.message}`);
+      }
+  };
+
+  const handleSkipCycle = async (itemId) => {
+      if (!user) return;
+      try {
+          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemId), {
+              lastOrdered: new Date().toISOString()
+          }, { merge: true });
+      } catch (e) {
+          alert(`Error skipping item: ${e.message}`);
+      }
+  };
+
   const handleBulkSync = async () => {
       if (!user) return;
       if (!confirm("Add missing items from Master List?")) return;
@@ -495,7 +587,6 @@ export default function GroceryApp() {
   const processScan = () => {
     setScanStep('processing');
     setTimeout(() => {
-        // MOCK OCR
         const mockReceiptData = [
             { id: 'item_1', name: 'Full Cream Milk', detectedQty: 1, detectedUnit: 'L', expectedQty: 1, match: true },
             { id: 'item_6', name: 'Tomatoes', detectedQty: 1, detectedUnit: 'kg', expectedQty: 1, match: true },
@@ -542,27 +633,27 @@ export default function GroceryApp() {
             <h2 className="text-xl font-bold mb-1 text-gray-800">Add to List</h2>
             <p className="text-sm text-gray-500 mb-6">Confirm details for <span className="font-semibold text-gray-900">{itemToAdd?.name}</span></p>
 
-            <div className="space-y-5">
+            <div className="space-y-6">
                 <div>
                     <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
-                        <Scale className="w-3 h-3 mr-1" /> Quantity & Weight
+                        <Scale className="w-3 h-3 mr-1" /> Packet Size
                     </label>
                     <div className="flex gap-3">
                         <div className="flex-1 relative">
                             <button
-                                onClick={() => setAddConfig({...addConfig, qty: Math.max(0.5, addConfig.qty - 0.5)})}
+                                onClick={() => setAddConfig({...addConfig, packetSize: Math.max(0.5, addConfig.packetSize - 0.5)})}
                                 className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
                             >
                                 -
                             </button>
                             <input
                                 type="number"
-                                value={addConfig.qty}
-                                onChange={(e) => setAddConfig({...addConfig, qty: parseFloat(e.target.value)})}
+                                value={addConfig.packetSize}
+                                onChange={(e) => setAddConfig({...addConfig, packetSize: parseFloat(e.target.value)})}
                                 className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"
                             />
                             <button
-                                onClick={() => setAddConfig({...addConfig, qty: addConfig.qty + 0.5})}
+                                onClick={() => setAddConfig({...addConfig, packetSize: addConfig.packetSize + 0.5})}
                                 className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
                             >
                                 +
@@ -576,6 +667,40 @@ export default function GroceryApp() {
                             >
                                 {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
+                        <Package className="w-3 h-3 mr-1" /> Number of Packs
+                    </label>
+                    <div className="flex gap-3 items-center">
+                        <div className="flex-1 relative">
+                            <button
+                                onClick={() => setAddConfig({...addConfig, packCount: Math.max(1, addConfig.packCount - 1)})}
+                                className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
+                            >
+                                -
+                            </button>
+                            <input
+                                type="number"
+                                value={addConfig.packCount}
+                                onChange={(e) => setAddConfig({...addConfig, packCount: parseInt(e.target.value)})}
+                                className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"
+                            />
+                            <button
+                                onClick={() => setAddConfig({...addConfig, packCount: addConfig.packCount + 1})}
+                                className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <div className="w-1/3 text-center">
+                            <div className="text-xs text-gray-400 font-medium uppercase">Total</div>
+                            <div className="text-lg font-bold text-indigo-600">
+                                {addConfig.packetSize * addConfig.packCount} {addConfig.unit}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -615,6 +740,104 @@ export default function GroceryApp() {
                     className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors"
                 >
                     Add to List
+                </button>
+            </div>
+        </div>
+    </div>
+  );
+
+  const ReceiveModal = () => (
+    <div className="absolute inset-0 bg-black/50 z-[60] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+        <div className="bg-white w-full rounded-2xl p-6 shadow-xl animate-slide-up">
+            <h2 className="text-xl font-bold mb-1 text-gray-800">Confirm Receipt</h2>
+            <p className="text-sm text-gray-500 mb-6">Verify what actually arrived for <span className="font-semibold text-gray-900">{itemToReceive?.name}</span></p>
+
+            <div className="space-y-6">
+                <div>
+                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
+                        <Scale className="w-3 h-3 mr-1" /> Packet Size (Received)
+                    </label>
+                    <div className="flex gap-3">
+                        <div className="flex-1 relative">
+                            <button
+                                onClick={() => setReceiveConfig({...receiveConfig, packetSize: Math.max(0.5, receiveConfig.packetSize - 0.5)})}
+                                className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
+                            >
+                                -
+                            </button>
+                            <input
+                                type="number"
+                                value={receiveConfig.packetSize}
+                                onChange={(e) => setReceiveConfig({...receiveConfig, packetSize: parseFloat(e.target.value)})}
+                                className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"
+                            />
+                            <button
+                                onClick={() => setReceiveConfig({...receiveConfig, packetSize: receiveConfig.packetSize + 0.5})}
+                                className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <div className="w-1/3">
+                            <select
+                                value={receiveConfig.unit}
+                                onChange={(e) => setReceiveConfig({...receiveConfig, unit: e.target.value})}
+                                className="w-full h-full p-3 font-medium bg-gray-50 rounded-xl border border-gray-200 text-center appearance-none"
+                            >
+                                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
+                        <Package className="w-3 h-3 mr-1" /> Packs Received
+                    </label>
+                    <div className="flex gap-3 items-center">
+                        <div className="flex-1 relative">
+                            <button
+                                onClick={() => setReceiveConfig({...receiveConfig, packCount: Math.max(1, receiveConfig.packCount - 1)})}
+                                className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
+                            >
+                                -
+                            </button>
+                            <input
+                                type="number"
+                                value={receiveConfig.packCount}
+                                onChange={(e) => setReceiveConfig({...receiveConfig, packCount: parseInt(e.target.value)})}
+                                className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"
+                            />
+                            <button
+                                onClick={() => setReceiveConfig({...receiveConfig, packCount: receiveConfig.packCount + 1})}
+                                className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
+                            >
+                                +
+                            </button>
+                        </div>
+
+                        <div className="w-1/3 text-center">
+                            <div className="text-xs text-gray-400 font-medium uppercase">Total Mass</div>
+                            <div className="text-lg font-bold text-emerald-600">
+                                {receiveConfig.packetSize * receiveConfig.packCount} {receiveConfig.unit}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex gap-3 mt-8">
+                <button
+                    onClick={() => setIsReceiveModalOpen(false)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={confirmManualReceive}
+                    className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-colors"
+                >
+                    Confirm
                 </button>
             </div>
         </div>
@@ -721,23 +944,36 @@ export default function GroceryApp() {
                         Est. Duration: {item.predictedDuration} days
                     </div>
                     </div>
-                    {isInCart ? (
-                         <div className="flex items-center gap-2">
-                             <div className="text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-lg text-xs font-bold flex items-center">
-                                 <Check className="w-3 h-3 mr-1" /> Added
-                             </div>
-                             <button
-                                onClick={() => removeFromCart(item.id)}
-                                className="bg-gray-200 p-1.5 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50"
-                             >
-                                 <Trash2 className="w-4 h-4" />
-                             </button>
-                         </div>
-                    ) : (
-                        <button onClick={() => initiateAddToCart(item)} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center">
-                            <Plus className="w-4 h-4 mr-1" /> Add
-                        </button>
-                    )}
+
+                    <div className="flex items-center gap-2">
+                        {isInCart ? (
+                             <>
+                                 <div className="text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-lg text-xs font-bold flex items-center">
+                                     <Check className="w-3 h-3 mr-1" /> Added
+                                 </div>
+                                 <button
+                                    onClick={() => removeFromCart(item.id)}
+                                    className="bg-gray-200 p-1.5 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50"
+                                 >
+                                     <Trash2 className="w-4 h-4" />
+                                 </button>
+                             </>
+                        ) : (
+                            <button onClick={() => initiateAddToCart(item)} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center">
+                                <Plus className="w-4 h-4 mr-1" /> Add
+                            </button>
+                        )}
+                        {/* Skip Suggestion Button */}
+                        {!isInCart && (
+                            <button
+                                onClick={() => handleSkipCycle(item.id)}
+                                className="bg-gray-100 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                title="Skip for now"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
                 </div>
               );
             })}
@@ -753,117 +989,175 @@ export default function GroceryApp() {
     </div>
   );
 
-  const PantryView = () => (
-    <div className="space-y-4 pb-20">
-      <div className="flex justify-between items-center mb-2 px-1">
-         <h1 className="text-2xl font-bold text-gray-900">My Pantry</h1>
-         <button onClick={() => setIsAddModalOpen(true)} className="text-indigo-600 text-sm font-semibold">+ Custom Item</button>
-      </div>
+  const PantryView = () => {
+    // Filter by search
+    const filteredItems = processedItems.filter(item =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-      {dbError && (
-          <div className="bg-red-100 border border-red-200 text-red-700 p-4 rounded-xl mb-4 text-xs">
-              <p className="font-bold flex items-center"><AlertCircle className="w-4 h-4 mr-1" /> Connection Error</p>
-              <p>{dbError}</p>
-          </div>
-      )}
+    // Group by Category
+    const groupedItems = filteredItems.reduce((acc, item) => {
+      const cat = item.category || 'Other';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(item);
+      return acc;
+    }, {});
 
-      {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
-              <p className="text-gray-500">Syncing with cloud...</p>
-          </div>
-      ) : items.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-              <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Database className="w-8 h-8 text-indigo-500" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Pantry is Empty</h3>
-              <p className="text-gray-500 text-sm mb-6">You are connected as a new user. Load the standard list to get started.</p>
-              <button
-                onClick={handleBulkSync}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 transition-colors flex items-center justify-center"
-              >
-                  <RefreshCw className="w-5 h-5 mr-2" /> Load Standard Items
+    // Sort categories alphabetically
+    const sortedCategories = Object.keys(groupedItems).sort();
+
+    return (
+      <div className="space-y-4 pb-20">
+        <div className="flex justify-between items-center mb-2 px-1">
+           <h1 className="text-2xl font-bold text-gray-900">My Pantry</h1>
+           <button onClick={() => setIsAddModalOpen(true)} className="text-indigo-600 text-sm font-semibold">+ Custom Item</button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center shadow-sm mb-4">
+          <Search className="w-5 h-5 text-gray-400 mr-2" />
+          <input
+            type="text"
+            placeholder="Search items..."
+            className="flex-1 outline-none text-gray-700 placeholder-gray-400"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+              <button onClick={() => setSearchQuery('')}>
+                  <X className="w-4 h-4 text-gray-400" />
               </button>
-          </div>
-      ) : (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
-          {processedItems.map(item => {
-            const isInCart = cart.find(c => c.id === item.id);
-            return (
-                <div
-                    key={item.id}
-                    className={`p-4 flex items-center justify-between transition-colors ${
-                        item.isOverdue ? 'bg-red-50' : 'bg-white'
-                    }`}
-                >
-                <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 ${
-                        item.isOrdered ? 'bg-blue-100 text-blue-600' :
-                        item.isOverdue ? 'bg-red-100 text-red-600' :
-                        item.hasPattern ? 'bg-indigo-50 text-gray-800' : 'bg-gray-100 text-gray-400'
-                    }`}>
-                    {item.isOrdered ? <Truck className="w-5 h-5" /> :
-                        item.isOverdue ? <AlertCircle className="w-5 h-5" /> :
-                        item.hasPattern ? '🧠' : '❔'}
-                    </div>
-                    <div>
-                    <div className={`text-sm font-bold ${item.isOverdue && !item.isOrdered ? 'text-red-700' : 'text-gray-700'}`}>
-                        {item.name}
-                    </div>
-                    <div className={`text-xs flex items-center ${item.isOverdue && !item.isOrdered ? 'text-red-500' : 'text-gray-400'}`}>
-                        {item.vendor} •
-                        {item.isOrdered ? (
-                            <span className="ml-1 text-blue-600 font-medium">On the Way</span>
-                        ) : item.hasPattern ? (
-                            <span className="ml-1 font-medium">
-                                Last: {item.daysSinceLastOrder}d | Est. Left: {item.predictedDuration - item.daysSinceLastOrder}d
-                            </span>
-                        ) : (
-                            <span className="ml-1">Learning... ({item.orderCount} orders)</span>
-                        )}
-                    </div>
-                    </div>
-                </div>
+          )}
+        </div>
 
-                {item.isOrdered ? (
-                    <button
-                        onClick={() => handleManualReceive(item.id)}
-                        className="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-blue-100 transition-colors"
-                    >
-                        Received?
-                    </button>
-                ) : isInCart ? (
-                    <div className="flex items-center gap-2">
-                        <div className="text-emerald-500 font-medium text-sm flex items-center bg-emerald-50 px-3 py-1.5 rounded-lg">
-                            <Check className="w-4 h-4 mr-1" /> Added
-                        </div>
-                        <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="bg-gray-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-100"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                ) : (
-                    <button
-                        onClick={() => initiateAddToCart(item)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            item.isOverdue
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                        }`}
-                    >
-                        Add
-                    </button>
-                )}
+        {dbError && (
+            <div className="bg-red-100 border border-red-200 text-red-700 p-4 rounded-xl mb-4 text-xs">
+                <p className="font-bold flex items-center"><AlertCircle className="w-4 h-4 mr-1" /> Connection Error</p>
+                <p>{dbError}</p>
+            </div>
+        )}
+
+        {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
+                <p className="text-gray-500">Syncing with cloud...</p>
+            </div>
+        ) : items.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+                <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Database className="w-8 h-8 text-indigo-500" />
                 </div>
-            );
-          })}
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Pantry is Empty</h3>
+                <p className="text-gray-500 text-sm mb-6">You are connected as a new user. Load the standard list to get started.</p>
+                <button
+                  onClick={handleBulkSync}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 transition-colors flex items-center justify-center"
+                >
+                    <RefreshCw className="w-5 h-5 mr-2" /> Load Standard Items
+                </button>
+            </div>
+        ) : (
+        <div className="space-y-6">
+            {sortedCategories.map(category => (
+                <div key={category}>
+                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">{category}</h3>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+                        {groupedItems[category]
+                            .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically within category
+                            .map(item => {
+                                const isInCart = cart.find(c => c.id === item.id);
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className={`p-4 flex items-center justify-between transition-colors ${
+                                            item.isOverdue ? 'bg-red-50' : 'bg-white'
+                                        }`}
+                                    >
+                                    <div className="flex items-center">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 ${
+                                            item.isOrdered ? 'bg-blue-100 text-blue-600' :
+                                            item.isOverdue ? 'bg-red-100 text-red-600' :
+                                            item.hasPattern ? 'bg-indigo-50 text-gray-800' : 'bg-gray-100 text-gray-400'
+                                        }`}>
+                                        {item.isOrdered ? <Truck className="w-5 h-5" /> :
+                                            item.isOverdue ? <AlertCircle className="w-5 h-5" /> :
+                                            item.hasPattern ? '🧠' : '❔'}
+                                        </div>
+                                        <div>
+                                        <div className={`text-sm font-bold ${item.isOverdue && !item.isOrdered ? 'text-red-700' : 'text-gray-700'}`}>
+                                            {item.name}
+                                        </div>
+                                        <div className={`text-xs flex items-center ${item.isOverdue && !item.isOrdered ? 'text-red-500' : 'text-gray-400'}`}>
+                                            {item.vendor} •
+                                            {item.isOrdered ? (
+                                                <span className="ml-1 text-blue-600 font-medium">On the Way</span>
+                                            ) : item.hasPattern ? (
+                                                <span className="ml-1 font-medium">
+                                                    Last: {item.daysSinceLastOrder}d | Est. Left: {item.predictedDuration - item.daysSinceLastOrder}d
+                                                </span>
+                                            ) : (
+                                                <span className="ml-1">Learning... ({item.orderCount} orders)</span>
+                                            )}
+                                        </div>
+                                        </div>
+                                    </div>
+
+                                    {item.isOrdered ? (
+                                        <div className="flex items-center gap-2">
+                                            {/* Not Delivered Button */}
+                                            <button
+                                                onClick={() => handleNotDelivered(item.id)}
+                                                className="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"
+                                                title="Not Delivered"
+                                            >
+                                                <XCircle className="w-4 h-4" />
+                                            </button>
+
+                                            {/* Received Button */}
+                                            <button
+                                                onClick={() => initiateManualReceive(item)}
+                                                className="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-blue-100 transition-colors"
+                                            >
+                                                <ClipboardCheck className="w-4 h-4 mr-1" />
+                                                Received?
+                                            </button>
+                                        </div>
+                                    ) : isInCart ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="text-emerald-500 font-medium text-sm flex items-center bg-emerald-50 px-3 py-1.5 rounded-lg">
+                                                <Check className="w-4 h-4 mr-1" /> Added
+                                            </div>
+                                            <button
+                                                onClick={() => removeFromCart(item.id)}
+                                                className="bg-gray-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-100"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => initiateAddToCart(item)}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                item.isOverdue
+                                                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                                            }`}
+                                        >
+                                            Add
+                                        </button>
+                                    )}
+                                    </div>
+                                );
+                            })
+                        }
+                    </div>
+                </div>
+            ))}
+        </div>
+        )}
       </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   const CartView = () => {
     const groupedCart = cart.reduce((acc, item) => {
@@ -896,8 +1190,14 @@ export default function GroceryApp() {
                   <div key={item.id} className="p-4 flex justify-between items-center">
                     <div>
                         <div className="text-gray-800 font-medium">{item.name}</div>
-                        <div className="text-xs text-gray-400 font-medium mt-0.5">
-                            {item.quantity} {item.unit}
+                        {/* Updated Cart Item Display */}
+                        <div className="text-xs text-gray-400 font-medium mt-0.5 flex items-center">
+                            {item.packCount > 1 ? (
+                                <span className="text-indigo-600 font-bold bg-indigo-50 px-1 rounded mr-1">
+                                    {item.packCount} x
+                                </span>
+                            ) : null}
+                            {item.packetSize} {item.unit}
                         </div>
                     </div>
                     <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 p-2">
@@ -966,13 +1266,13 @@ export default function GroceryApp() {
       {/* MODALS */}
       {isScanning && <ScanView />}
       {isAddToCartModalOpen && <AddToCartModal />}
+      {isReceiveModalOpen && <ReceiveModal />}
 
       {/* DEVELOPER TOOLS */}
       {isAdminOpen && (
           <div className="absolute bottom-20 left-4 bg-gray-800 text-white p-4 rounded-xl shadow-xl z-50 w-64 animate-fade-in">
               <h3 className="text-sm font-bold mb-2 flex items-center"><Database className="w-4 h-4 mr-2" /> Database Admin</h3>
 
-              {/* Added User ID Display for Debugging */}
               <div className="mb-3 p-2 bg-gray-700 rounded-lg">
                   <p className="text-[10px] text-gray-400 uppercase">Current User ID:</p>
                   <p className="text-xs font-mono break-all">{user?.uid || 'Not Connected'}</p>
