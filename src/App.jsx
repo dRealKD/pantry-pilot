@@ -25,7 +25,9 @@ import {
   Package,
   ClipboardCheck,
   XCircle,
-  Search
+  Search,
+  Copy,
+  ArrowDownCircle // New Icon
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -110,6 +112,210 @@ const normalizeQuantity = (qty, unit) => {
   return val;
 };
 
+// --- SUB-COMPONENTS ---
+
+const PantryView = ({
+  items,
+  cart,
+  isLoading,
+  dbError,
+  hasNewItems, // NEW PROP
+  onAddCustom,
+  onSync,
+  onAddToCart,
+  onRemoveFromCart,
+  onManualReceive,
+  onNotDelivered
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter by search
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Group by Category
+  const groupedItems = filteredItems.reduce((acc, item) => {
+    const cat = item.category || 'Other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(item);
+    return acc;
+  }, {});
+
+  const sortedCategories = Object.keys(groupedItems).sort();
+
+  return (
+    <div className="space-y-4 pb-20">
+      <div className="flex justify-between items-center mb-2 px-1">
+         <h1 className="text-2xl font-bold text-gray-900">My Pantry</h1>
+         <button onClick={onAddCustom} className="text-indigo-600 text-sm font-semibold">+ Custom Item</button>
+      </div>
+
+      {/* NEW: Update Banner */}
+      {hasNewItems && !isLoading && (
+          <button
+            onClick={onSync}
+            className="w-full bg-blue-50 border border-blue-200 p-3 rounded-xl flex items-center justify-between text-blue-700 mb-2 shadow-sm animate-pulse"
+          >
+              <div className="flex items-center">
+                  <ArrowDownCircle className="w-5 h-5 mr-2" />
+                  <span className="text-sm font-bold">New items available from Master List</span>
+              </div>
+              <span className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full font-bold">Sync Now</span>
+          </button>
+      )}
+
+      {/* Search Bar */}
+      <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center shadow-sm mb-4">
+        <Search className="w-5 h-5 text-gray-400 mr-2" />
+        <input
+          type="text"
+          placeholder="Search items..."
+          className="flex-1 outline-none text-gray-700 placeholder-gray-400"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.currentTarget.blur();
+            }
+          }}
+        />
+        {searchQuery && (
+            <button onClick={() => setSearchQuery('')}>
+                <X className="w-4 h-4 text-gray-400" />
+            </button>
+        )}
+      </div>
+
+      {dbError && (
+          <div className="bg-red-100 border border-red-200 text-red-700 p-4 rounded-xl mb-4 text-xs">
+              <p className="font-bold flex items-center"><AlertCircle className="w-4 h-4 mr-1" /> Connection Error</p>
+              <p>{dbError}</p>
+          </div>
+      )}
+
+      {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
+              <p className="text-gray-500">Syncing with cloud...</p>
+          </div>
+      ) : items.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+              <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Database className="w-8 h-8 text-indigo-500" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Pantry is Empty</h3>
+              <p className="text-gray-500 text-sm mb-6">You are connected as a new user. Load the standard list to get started.</p>
+              <button
+                onClick={onSync}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 transition-colors flex items-center justify-center"
+              >
+                  <RefreshCw className="w-5 h-5 mr-2" /> Load Standard Items
+              </button>
+          </div>
+      ) : (
+      <div className="space-y-6">
+          {sortedCategories.map(category => (
+              <div key={category}>
+                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">{category}</h3>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+                      {groupedItems[category]
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map(item => {
+                              const isInCart = cart.find(c => c.id === item.id);
+                              return (
+                                  <div
+                                      key={item.id}
+                                      className={`p-4 flex items-center justify-between transition-colors ${
+                                          item.isOverdue ? 'bg-red-50' : 'bg-white'
+                                      }`}
+                                  >
+                                  <div className="flex items-center">
+                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 ${
+                                          item.isOrdered ? 'bg-blue-100 text-blue-600' :
+                                          item.isOverdue ? 'bg-red-100 text-red-600' :
+                                          item.hasPattern ? 'bg-indigo-50 text-gray-800' : 'bg-gray-100 text-gray-400'
+                                      }`}>
+                                      {item.isOrdered ? <Truck className="w-5 h-5" /> :
+                                          item.isOverdue ? <AlertCircle className="w-5 h-5" /> :
+                                          item.hasPattern ? '🧠' : '❔'}
+                                      </div>
+                                      <div>
+                                      <div className={`text-sm font-bold ${item.isOverdue && !item.isOrdered ? 'text-red-700' : 'text-gray-700'}`}>
+                                          {item.name}
+                                      </div>
+                                      <div className={`text-xs flex items-center ${item.isOverdue && !item.isOrdered ? 'text-red-500' : 'text-gray-400'}`}>
+                                          {item.vendor} •
+                                          {item.isOrdered ? (
+                                              <span className="ml-1 text-blue-600 font-medium">On the Way</span>
+                                          ) : item.hasPattern ? (
+                                              <span className="ml-1 font-medium">
+                                                  Last: {item.daysSinceLastOrder}d | Est. Left: {item.predictedDuration - item.daysSinceLastOrder}d
+                                              </span>
+                                          ) : (
+                                              <span className="ml-1">Learning... ({item.orderCount} orders)</span>
+                                          )}
+                                      </div>
+                                      </div>
+                                  </div>
+
+                                  {item.isOrdered ? (
+                                      <div className="flex items-center gap-2">
+                                          <button
+                                              onClick={() => onNotDelivered(item.id)}
+                                              className="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"
+                                              title="Not Delivered"
+                                          >
+                                              <XCircle className="w-4 h-4" />
+                                          </button>
+
+                                          <button
+                                              onClick={() => onManualReceive(item)}
+                                              className="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-blue-100 transition-colors"
+                                          >
+                                              <ClipboardCheck className="w-4 h-4 mr-1" />
+                                              Received?
+                                          </button>
+                                      </div>
+                                  ) : isInCart ? (
+                                      <div className="flex items-center gap-2">
+                                          <div className="text-emerald-500 font-medium text-sm flex items-center bg-emerald-50 px-3 py-1.5 rounded-lg">
+                                              <Check className="w-4 h-4 mr-1" /> Added
+                                          </div>
+                                          <button
+                                              onClick={() => onRemoveFromCart(item.id)}
+                                              className="bg-gray-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-100"
+                                          >
+                                              <Trash2 className="w-4 h-4" />
+                                          </button>
+                                      </div>
+                                  ) : (
+                                      <button
+                                          onClick={() => onAddToCart(item)}
+                                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                              item.isOverdue
+                                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                              : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                                          }`}
+                                      >
+                                          Add
+                                      </button>
+                                  )}
+                                  </div>
+                              );
+                          })
+                      }
+                  </div>
+              </div>
+          ))}
+      </div>
+      )}
+    </div>
+  );
+};
+
+// --- MAIN COMPONENT ---
+
 export default function GroceryApp() {
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
@@ -118,7 +324,7 @@ export default function GroceryApp() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [hasNewItems, setHasNewItems] = useState(false); // Track updates
 
   // UI States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -127,18 +333,8 @@ export default function GroceryApp() {
 
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
   const [itemToReceive, setItemToReceive] = useState(null);
-  const [receiveConfig, setReceiveConfig] = useState({
-      packCount: 1,
-      packetSize: 1,
-      unit: 'pcs'
-  });
-
-  const [addConfig, setAddConfig] = useState({
-      packCount: 1,
-      packetSize: 1,
-      unit: 'pcs',
-      vendor: ''
-  });
+  const [receiveConfig, setReceiveConfig] = useState({ packCount: 1, packetSize: 1, unit: 'pcs' });
+  const [addConfig, setAddConfig] = useState({ packCount: 1, packetSize: 1, unit: 'pcs', vendor: '' });
 
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState('camera');
@@ -154,7 +350,7 @@ export default function GroceryApp() {
     unit: 'pcs'
   });
 
-  // --- 1. AUTHENTICATION ---
+  // --- AUTH ---
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -177,7 +373,7 @@ export default function GroceryApp() {
     return () => unsubscribe();
   }, []);
 
-  // --- 2. DATA SYNC (FIRESTORE) ---
+  // --- SYNC & CHECK UPDATES ---
   useEffect(() => {
     if (!user) return;
     setIsLoading(true);
@@ -188,9 +384,17 @@ export default function GroceryApp() {
       const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setItems(fetchedItems);
       setIsLoading(false);
+
+      // CHECK FOR MISSING MASTER ITEMS
+      const missingCount = SEED_ITEMS.filter(seedItem => {
+          // Check if seedItem name exists in fetchedItems (Case-Insensitive)
+          return !fetchedItems.some(i => (i.name || '').toLowerCase() === seedItem.name.toLowerCase());
+      }).length;
+
+      setHasNewItems(missingCount > 0);
+
     }, (error) => {
-      console.error("Pantry sync error:", error);
-      setDbError(`Database Error: ${error.message}. Check Permissions/Rules.`);
+      setDbError(`Database Error: ${error.message}`);
       setIsLoading(false);
     });
 
@@ -198,7 +402,7 @@ export default function GroceryApp() {
     const unsubscribeCart = onSnapshot(cartRef, (snapshot) => {
       const fetchedCart = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setCart(fetchedCart);
-    }, (error) => console.error("Cart sync error:", error));
+    }, (error) => console.error("Cart error:", error));
 
     return () => {
       unsubscribePantry();
@@ -206,64 +410,43 @@ export default function GroceryApp() {
     };
   }, [user]);
 
-  // --- 3. AUTO-CLEANUP EFFECT ---
+  // --- AUTO CLEANUP ---
   useEffect(() => {
     if (!user || items.length === 0) return;
-
     const checkAutoReceive = () => {
         const now = new Date();
         const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
-        const itemsToAutoReceive = items.filter(item =>
-            item.isOrdered &&
-            item.orderPlacedAt &&
-            (now - new Date(item.orderPlacedAt) > ONE_DAY_MS)
-        );
-
+        const itemsToAutoReceive = items.filter(item => item.isOrdered && item.orderPlacedAt && (now - new Date(item.orderPlacedAt) > ONE_DAY_MS));
         if (itemsToAutoReceive.length === 0) return;
-
         const batch = writeBatch(db);
         itemsToAutoReceive.forEach(item => {
              const stats = calculateReceivedStats(item, now, item.quantity, item.unit);
              const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', item.id);
              batch.update(docRef, stats);
         });
-        batch.commit().catch(e => console.error("Auto-cleanup failed", e));
+        batch.commit().catch(e => console.error("Cleanup failed", e));
     };
-
     const interval = setInterval(checkAutoReceive, 60000);
     checkAutoReceive();
     return () => clearInterval(interval);
   }, [items, user]);
 
-
-  // --- LOGIC HELPERS ---
+  // --- LOGIC ---
   const calculateReceivedStats = (item, receiveDate, receivedQty, receivedUnit) => {
     let newAvgRate = item.avgDailyConsumption;
     let newOrderCount = (item.orderCount || 0) + 1;
-
     const normReceivedQty = normalizeQuantity(receivedQty, receivedUnit);
-    const normLastQty = item.lastQuantity
-        ? normalizeQuantity(item.lastQuantity, item.lastUnit)
-        : normReceivedQty;
+    const normLastQty = item.lastQuantity ? normalizeQuantity(item.lastQuantity, item.lastUnit) : normReceivedQty;
 
     if (item.lastOrdered) {
         const lastDate = new Date(item.lastOrdered);
         const diffTime = Math.abs(receiveDate - lastDate);
         const daysBetween = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-
         const observedRate = normLastQty / daysBetween;
-
-        if (!item.avgDailyConsumption) {
-            newAvgRate = observedRate;
-        } else {
-            newAvgRate = (item.avgDailyConsumption * 0.7) + (observedRate * 0.3);
-        }
+        if (!item.avgDailyConsumption) newAvgRate = observedRate;
+        else newAvgRate = (item.avgDailyConsumption * 0.7) + (observedRate * 0.3);
     }
-
-    const estimatedDays = newAvgRate && newAvgRate > 0
-        ? Math.ceil(normReceivedQty / newAvgRate)
-        : (item.frequencyDays || 7);
+    const estimatedDays = newAvgRate && newAvgRate > 0 ? Math.ceil(normReceivedQty / newAvgRate) : (item.frequencyDays || 7);
 
     return {
         lastOrdered: receiveDate.toISOString(),
@@ -281,29 +464,9 @@ export default function GroceryApp() {
 
   const processedItems = useMemo(() => {
     const today = new Date();
-
     const enrichedItems = items.map(item => {
-      if (item.isOrdered) {
-         return {
-            ...item,
-            daysSinceLastOrder: 0,
-            stockStatus: 'On the Way',
-            urgencyRatio: -1,
-            isOverdue: false, // Ensures 'Urgent' status is removed if ordered
-            hasPattern: true
-         };
-      }
-
-      if (!item.lastOrdered) {
-        return {
-          ...item,
-          daysSinceLastOrder: 0,
-          stockStatus: 'New',
-          urgencyRatio: 0,
-          isOverdue: false,
-          hasPattern: false
-        };
-      }
+      if (item.isOrdered) return { ...item, daysSinceLastOrder: 0, stockStatus: 'On the Way', urgencyRatio: -1, isOverdue: false, hasPattern: true };
+      if (!item.lastOrdered) return { ...item, daysSinceLastOrder: 0, stockStatus: 'New', urgencyRatio: 0, isOverdue: false, hasPattern: false };
 
       const lastOrder = new Date(item.lastOrdered);
       const diffTime = Math.abs(today - lastOrder);
@@ -316,8 +479,7 @@ export default function GroceryApp() {
           const normLastQty = normalizeQuantity(item.lastQuantity, item.lastUnit);
           predictedDuration = normLastQty / item.avgDailyConsumption;
           percentConsumed = diffDays / predictedDuration;
-      }
-      else if (item.frequencyDays) {
+      } else if (item.frequencyDays) {
           predictedDuration = item.frequencyDays;
           percentConsumed = diffDays / item.frequencyDays;
       }
@@ -328,13 +490,7 @@ export default function GroceryApp() {
       else stockStatus = 'Good';
 
       return {
-        ...item,
-        daysSinceLastOrder: diffDays,
-        stockStatus,
-        urgencyRatio: percentConsumed,
-        predictedDuration: Math.round(predictedDuration),
-        isOverdue: percentConsumed >= 1.0, // Determines 'Urgent' visual
-        hasPattern: !!item.lastOrdered
+        ...item, daysSinceLastOrder: diffDays, stockStatus, urgencyRatio: percentConsumed, predictedDuration: Math.round(predictedDuration), isOverdue: percentConsumed >= 1.0, hasPattern: !!item.lastOrdered
       };
     });
 
@@ -346,215 +502,106 @@ export default function GroceryApp() {
         if (a.hasPattern && b.hasPattern) return b.urgencyRatio - a.urgencyRatio;
         return b.daysSinceLastOrder - a.daysSinceLastOrder;
     });
-
   }, [items]);
 
-  const suggestions = processedItems.filter(item =>
-    !item.isOrdered &&
-    item.hasPattern &&
-    item.urgencyRatio >= 0.8
-  );
+  const suggestions = processedItems.filter(item => !item.isOrdered && item.hasPattern && item.urgencyRatio >= 0.8);
 
   // --- ACTIONS ---
-
   const initiateAddToCart = (item) => {
     if (cart.find(c => c.id === item.id)) return;
     setItemToAdd(item);
-
-    setAddConfig({
-        packCount: 1,
-        packetSize: item.quantity || 1,
-        unit: item.unit || 'pcs',
-        vendor: item.vendor || 'BigBasket'
-    });
+    setAddConfig({ packCount: 1, packetSize: item.quantity || 1, unit: item.unit || 'pcs', vendor: item.vendor || 'BigBasket' });
     setIsAddToCartModalOpen(true);
   };
 
   const confirmAddToCart = async () => {
     if (!itemToAdd || !user) return;
-
     const totalQty = addConfig.packetSize * addConfig.packCount;
-
-    const finalItem = {
-        ...itemToAdd,
-        packCount: addConfig.packCount,
-        packetSize: addConfig.packetSize,
-        unit: addConfig.unit,
-        vendor: addConfig.vendor,
-        quantity: totalQty
-    };
-
+    const finalItem = { ...itemToAdd, packCount: addConfig.packCount, packetSize: addConfig.packetSize, unit: addConfig.unit, vendor: addConfig.vendor, quantity: totalQty };
     try {
         await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'cart', finalItem.id), finalItem);
         setIsAddToCartModalOpen(false);
         setItemToAdd(null);
-    } catch (e) {
-        alert(`Error adding to cart: ${e.message}`);
-    }
+    } catch (e) { alert(`Error: ${e.message}`); }
   };
 
   const removeFromCart = async (itemId) => {
     if (!user) return;
-    try {
-        await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'cart', itemId));
-    } catch (e) {
-        console.error("Error removing from cart", e);
-    }
+    try { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'cart', itemId)); }
+    catch (e) { console.error("Error removing", e); }
   };
 
   const handleCreateNewItem = async () => {
-    if (!user) {
-        alert("Not authenticated. Cannot save.");
-        return;
-    }
-
-    if (!newItem.name || newItem.name.trim().length === 0) {
-        alert("Please enter a name for the item.");
-        return;
-    }
-
+    if (!user) return alert("Not authenticated.");
+    if (!newItem.name || newItem.name.trim().length === 0) return alert("Name required.");
     const normalizedName = newItem.name.trim().toLowerCase();
-    const exists = items && items.length > 0 && items.some(item =>
-        (item.name || '').trim().toLowerCase() === normalizedName
-    );
-
-    if (exists) {
-        alert(`Duplicate: "${newItem.name}" is already in your pantry.`);
-        return;
-    }
+    if (items && items.some(item => (item.name || '').trim().toLowerCase() === normalizedName)) return alert("Duplicate item.");
 
     const newItemId = `custom_${Date.now()}`;
-    const newItemObj = {
-      ...newItem,
-      id: newItemId,
-      lastOrdered: null,
-      frequencyDays: null,
-      avgDailyConsumption: null,
-      orderCount: 0,
-      availableVendors: GENERIC_GROCERY_APPS
-    };
-
+    const newItemObj = { ...newItem, id: newItemId, lastOrdered: null, frequencyDays: null, avgDailyConsumption: null, orderCount: 0, availableVendors: GENERIC_GROCERY_APPS };
     try {
         await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', newItemId), newItemObj);
         setIsAddModalOpen(false);
         setNewItem({ name: '', category: 'Vegetables', vendor: 'BigBasket', frequencyDays: 7, quantity: 1, unit: 'pcs' });
-    } catch (e) {
-        alert(`Failed to save item: ${e.message}\n\nCheck your database rules/permissions.`);
-    }
+    } catch (e) { alert(`Save failed: ${e.message}`); }
   };
 
   const handleCheckout = async (vendorName) => {
     if (!user) return;
     const itemsToCheckout = cart.filter(c => c.vendor === vendorName);
     const now = new Date().toISOString();
+    const orderText = `*${vendorName} Order List:*\n\n` + itemsToCheckout.map(item => item.packCount > 1 ? `• ${item.name} - ${item.packCount} packs x ${item.packetSize} ${item.unit}` : `• ${item.name} - ${item.quantity} ${item.unit}`).join('\n');
 
-    const orderText = `*${vendorName} Order List:*\n\n` +
-        itemsToCheckout.map(item => {
-            if (item.packCount > 1) {
-                return `• ${item.name} - ${item.packCount} packs x ${item.packetSize} ${item.unit}`;
-            }
-            return `• ${item.name} - ${item.quantity} ${item.unit}`;
-        }).join('\n');
-
-    try {
-        await navigator.clipboard.writeText(orderText);
-    } catch (err) {
-        console.error('Clipboard failed', err);
-    }
-
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(orderText)}`;
-    window.open(whatsappUrl, '_blank');
+    try { await navigator.clipboard.writeText(orderText); } catch (err) { console.error('Clip failed', err); }
+    window.open(`https://wa.me/?text=${encodeURIComponent(orderText)}`, '_blank');
 
     const batch = writeBatch(db);
     itemsToCheckout.forEach(item => {
         const pantryRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', item.id);
-        batch.update(pantryRef, {
-            isOrdered: true,
-            orderPlacedAt: now,
-            quantity: item.quantity,
-            unit: item.unit,
-            orderedPackCount: item.packCount,
-            orderedPacketSize: item.packetSize
-        });
+        batch.update(pantryRef, { isOrdered: true, orderPlacedAt: now, quantity: item.quantity, unit: item.unit, orderedPackCount: item.packCount, orderedPacketSize: item.packetSize });
     });
     itemsToCheckout.forEach(item => {
         const cartRef = doc(db, 'artifacts', appId, 'users', user.uid, 'cart', item.id);
         batch.delete(cartRef);
     });
-
     await batch.commit();
-
-    alert(`Opening WhatsApp...\n\nList also copied to clipboard.`);
-    setTimeout(() => {
-        setShowNotification(true);
-    }, 3000);
+    alert(`List copied & WhatsApp opened.`);
+    setTimeout(() => setShowNotification(true), 3000);
   };
 
-  // --- MANUAL RECEIVE LOGIC ---
   const initiateManualReceive = (item) => {
       setItemToReceive(item);
-      setReceiveConfig({
-          packCount: item.orderedPackCount || 1,
-          packetSize: item.orderedPacketSize || item.quantity || 1,
-          unit: item.unit || 'pcs'
-      });
+      setReceiveConfig({ packCount: item.orderedPackCount || 1, packetSize: item.orderedPacketSize || item.quantity || 1, unit: item.unit || 'pcs' });
       setIsReceiveModalOpen(true);
   };
 
   const confirmManualReceive = async () => {
       if (!user || !itemToReceive) return;
-
       const today = new Date();
       const totalReceivedQty = receiveConfig.packCount * receiveConfig.packetSize;
-
       const updates = calculateReceivedStats(itemToReceive, today, totalReceivedQty, receiveConfig.unit);
-
-      // Preserve original default packet size/count logic
-      const finalUpdates = {
-          ...updates,
-      };
-
       try {
-          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemToReceive.id), finalUpdates, { merge: true });
+          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemToReceive.id), updates, { merge: true });
           setIsReceiveModalOpen(false);
           setItemToReceive(null);
-      } catch (e) {
-          alert(`Error receiving item: ${e.message}`);
-      }
+      } catch (e) { alert(`Error: ${e.message}`); }
   };
 
   const handleNotDelivered = async (itemId) => {
       if (!user) return;
-      try {
-          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemId), {
-              isOrdered: false,
-              orderPlacedAt: null,
-              orderedPackCount: null,
-              orderedPacketSize: null
-          }, { merge: true });
-      } catch (e) {
-          alert(`Error updating item: ${e.message}`);
-      }
+      try { await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemId), { isOrdered: false, orderPlacedAt: null, orderedPackCount: null, orderedPacketSize: null }, { merge: true }); } catch (e) { alert(`Error: ${e.message}`); }
   };
 
   const handleSkipCycle = async (itemId) => {
       if (!user) return;
-      try {
-          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemId), {
-              lastOrdered: new Date().toISOString()
-          }, { merge: true });
-      } catch (e) {
-          alert(`Error skipping item: ${e.message}`);
-      }
+      try { await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemId), { lastOrdered: new Date().toISOString() }, { merge: true }); } catch (e) { alert(`Error: ${e.message}`); }
   };
 
   const handleBulkSync = async () => {
       if (!user) return;
-      if (!confirm("Add missing items from Master List?")) return;
-
+      if (!confirm("Add missing items?")) return;
       const batch = writeBatch(db);
       let count = 0;
-
       SEED_ITEMS.forEach(seedItem => {
           const exists = items.some(i => (i.name || '').toLowerCase() === seedItem.name.toLowerCase());
           if (!exists) {
@@ -563,345 +610,11 @@ export default function GroceryApp() {
               count++;
           }
       });
-
-      try {
-        if (count > 0) {
-            await batch.commit();
-            alert(`Successfully added ${count} new items.`);
-        } else {
-            alert("Database is already up to date.");
-        }
-      } catch (e) {
-          alert(`Sync failed: ${e.message}`);
-      }
+      try { if (count > 0) { await batch.commit(); alert(`Added ${count} items.`); } else { alert("Up to date."); } } catch (e) { alert(`Sync failed: ${e.message}`); }
       setIsAdminOpen(false);
   };
 
-  // --- OCR / Scanning Logic ---
-
-  const startScan = () => {
-    setIsScanning(true);
-    setScanStep('camera');
-  };
-
-  const processScan = () => {
-    setScanStep('processing');
-    setTimeout(() => {
-        const mockReceiptData = [
-            { id: 'item_1', name: 'Full Cream Milk', detectedQty: 1, detectedUnit: 'L', expectedQty: 1, match: true },
-            { id: 'item_6', name: 'Tomatoes', detectedQty: 1, detectedUnit: 'kg', expectedQty: 1, match: true },
-        ];
-        setScannedData(mockReceiptData);
-        setScanStep('review');
-    }, 2000);
-  };
-
-  const confirmReceipt = async () => {
-    if (!user) return;
-    const today = new Date();
-    const batch = writeBatch(db);
-
-    items.forEach(item => {
-        const scanMatch = scannedData.find(s => s.id === item.id);
-        if (scanMatch) {
-            const stats = calculateReceivedStats(item, today, scanMatch.detectedQty, scanMatch.detectedUnit);
-            const finalUpdates = {
-                ...stats,
-                quantity: scanMatch.detectedQty,
-                unit: scanMatch.detectedUnit,
-            };
-            const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', item.id);
-            batch.update(docRef, finalUpdates);
-        }
-    });
-
-    try {
-        await batch.commit();
-        setIsScanning(false);
-        setShowNotification(false);
-        setActiveTab('pantry');
-    } catch (e) {
-        alert(`Receipt update failed: ${e.message}`);
-    }
-  };
-
   // --- VIEWS ---
-
-  const AddToCartModal = () => (
-    <div className="absolute inset-0 bg-black/50 z-[60] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-        <div className="bg-white w-full rounded-2xl p-6 shadow-xl animate-slide-up">
-            <h2 className="text-xl font-bold mb-1 text-gray-800">Add to List</h2>
-            <p className="text-sm text-gray-500 mb-6">Confirm details for <span className="font-semibold text-gray-900">{itemToAdd?.name}</span></p>
-
-            <div className="space-y-6">
-                <div>
-                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
-                        <Scale className="w-3 h-3 mr-1" /> Packet Size
-                    </label>
-                    <div className="flex gap-3">
-                        <div className="flex-1 relative">
-                            <button
-                                onClick={() => setAddConfig({...addConfig, packetSize: Math.max(0.5, addConfig.packetSize - 0.5)})}
-                                className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
-                            >
-                                -
-                            </button>
-                            <input
-                                type="number"
-                                value={addConfig.packetSize}
-                                onChange={(e) => setAddConfig({...addConfig, packetSize: parseFloat(e.target.value)})}
-                                className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"
-                            />
-                            <button
-                                onClick={() => setAddConfig({...addConfig, packetSize: addConfig.packetSize + 0.5})}
-                                className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
-                            >
-                                +
-                            </button>
-                        </div>
-                        <div className="w-1/3">
-                            <select
-                                value={addConfig.unit}
-                                onChange={(e) => setAddConfig({...addConfig, unit: e.target.value})}
-                                className="w-full h-full p-3 font-medium bg-gray-50 rounded-xl border border-gray-200 text-center appearance-none"
-                            >
-                                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
-                        <Package className="w-3 h-3 mr-1" /> Number of Packs
-                    </label>
-                    <div className="flex gap-3 items-center">
-                        <div className="flex-1 relative">
-                            <button
-                                onClick={() => setAddConfig({...addConfig, packCount: Math.max(1, addConfig.packCount - 1)})}
-                                className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
-                            >
-                                -
-                            </button>
-                            <input
-                                type="number"
-                                value={addConfig.packCount}
-                                onChange={(e) => setAddConfig({...addConfig, packCount: parseInt(e.target.value)})}
-                                className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"
-                            />
-                            <button
-                                onClick={() => setAddConfig({...addConfig, packCount: addConfig.packCount + 1})}
-                                className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
-                            >
-                                +
-                            </button>
-                        </div>
-                        <div className="w-1/3 text-center">
-                            <div className="text-xs text-gray-400 font-medium uppercase">Total</div>
-                            <div className="text-lg font-bold text-indigo-600">
-                                {addConfig.packetSize * addConfig.packCount} {addConfig.unit}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
-                        <Store className="w-3 h-3 mr-1" /> Select Store
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {(itemToAdd?.availableVendors || VENDORS).map(v => (
-                            <button
-                                key={v}
-                                onClick={() => setAddConfig({...addConfig, vendor: v})}
-                                className={`p-3 rounded-xl border text-sm font-medium transition-all text-left flex items-center justify-between ${
-                                    addConfig.vendor === v
-                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600'
-                                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-                                }`}
-                            >
-                                {v}
-                                {addConfig.vendor === v && <Check className="w-4 h-4" />}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex gap-3 mt-8">
-                <button
-                    onClick={() => setIsAddToCartModalOpen(false)}
-                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={confirmAddToCart}
-                    className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors"
-                >
-                    Add to List
-                </button>
-            </div>
-        </div>
-    </div>
-  );
-
-  const ReceiveModal = () => (
-    <div className="absolute inset-0 bg-black/50 z-[60] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-        <div className="bg-white w-full rounded-2xl p-6 shadow-xl animate-slide-up">
-            <h2 className="text-xl font-bold mb-1 text-gray-800">Confirm Receipt</h2>
-            <p className="text-sm text-gray-500 mb-6">Verify what actually arrived for <span className="font-semibold text-gray-900">{itemToReceive?.name}</span></p>
-
-            <div className="space-y-6">
-                <div>
-                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
-                        <Scale className="w-3 h-3 mr-1" /> Packet Size (Received)
-                    </label>
-                    <div className="flex gap-3">
-                        <div className="flex-1 relative">
-                            <button
-                                onClick={() => setReceiveConfig({...receiveConfig, packetSize: Math.max(0.5, receiveConfig.packetSize - 0.5)})}
-                                className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
-                            >
-                                -
-                            </button>
-                            <input
-                                type="number"
-                                value={receiveConfig.packetSize}
-                                onChange={(e) => setReceiveConfig({...receiveConfig, packetSize: parseFloat(e.target.value)})}
-                                className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"
-                            />
-                            <button
-                                onClick={() => setReceiveConfig({...receiveConfig, packetSize: receiveConfig.packetSize + 0.5})}
-                                className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
-                            >
-                                +
-                            </button>
-                        </div>
-                        <div className="w-1/3">
-                            <select
-                                value={receiveConfig.unit}
-                                onChange={(e) => setReceiveConfig({...receiveConfig, unit: e.target.value})}
-                                className="w-full h-full p-3 font-medium bg-gray-50 rounded-xl border border-gray-200 text-center appearance-none"
-                            >
-                                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2">
-                        <Package className="w-3 h-3 mr-1" /> Packs Received
-                    </label>
-                    <div className="flex gap-3 items-center">
-                        <div className="flex-1 relative">
-                            <button
-                                onClick={() => setReceiveConfig({...receiveConfig, packCount: Math.max(1, receiveConfig.packCount - 1)})}
-                                className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
-                            >
-                                -
-                            </button>
-                            <input
-                                type="number"
-                                value={receiveConfig.packCount}
-                                onChange={(e) => setReceiveConfig({...receiveConfig, packCount: parseInt(e.target.value)})}
-                                className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"
-                            />
-                            <button
-                                onClick={() => setReceiveConfig({...receiveConfig, packCount: receiveConfig.packCount + 1})}
-                                className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200"
-                            >
-                                +
-                            </button>
-                        </div>
-
-                        <div className="w-1/3 text-center">
-                            <div className="text-xs text-gray-400 font-medium uppercase">Total Mass</div>
-                            <div className="text-lg font-bold text-emerald-600">
-                                {receiveConfig.packetSize * receiveConfig.packCount} {receiveConfig.unit}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex gap-3 mt-8">
-                <button
-                    onClick={() => setIsReceiveModalOpen(false)}
-                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={confirmManualReceive}
-                    className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-colors"
-                >
-                    Confirm
-                </button>
-            </div>
-        </div>
-    </div>
-  );
-
-  const ScanView = () => (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
-       <button onClick={() => setIsScanning(false)} className="absolute top-4 right-4 text-white z-50 p-2 bg-gray-800/50 rounded-full">
-         <X className="w-6 h-6" />
-       </button>
-       {scanStep === 'camera' && (
-           <div className="flex-1 flex flex-col items-center justify-center relative">
-               <div className="w-full h-full absolute inset-0 bg-gray-900">
-                   <div className="w-full h-full flex items-center justify-center opacity-30">
-                       <p className="text-white text-lg">Camera Feed</p>
-                   </div>
-               </div>
-               <div className="w-64 h-80 border-2 border-emerald-500 rounded-lg relative z-10 flex items-center justify-center">
-                    <div className="w-full h-0.5 bg-emerald-500 absolute top-0 animate-scan"></div>
-               </div>
-               <p className="text-white mt-8 z-10 bg-black/50 px-4 py-2 rounded-full">Align receipt within frame</p>
-               <button onClick={processScan} className="absolute bottom-10 w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center">
-                   <div className="w-12 h-12 bg-emerald-600 rounded-full"></div>
-               </button>
-           </div>
-       )}
-       {scanStep === 'processing' && (
-           <div className="flex-1 flex flex-col items-center justify-center bg-gray-900">
-               <ScanLine className="w-16 h-16 text-emerald-500 animate-pulse mb-4" />
-               <h2 className="text-xl font-bold text-white">Learning Patterns...</h2>
-           </div>
-       )}
-       {scanStep === 'review' && (
-           <div className="flex-1 bg-gray-50 flex flex-col">
-               <div className="bg-white p-4 border-b border-gray-200 shadow-sm mt-12 rounded-t-2xl flex-1">
-                   <h2 className="text-xl font-bold text-gray-800 mb-1">Receipt Processed</h2>
-                   <p className="text-sm text-gray-500 mb-6">We'll update your usage frequency based on this.</p>
-                   <div className="space-y-4">
-                       {scannedData.map((data, idx) => (
-                           <div key={idx} className="p-4 rounded-xl border border-gray-200 bg-white">
-                               <div className="flex justify-between items-start mb-2">
-                                   <div className="font-semibold text-gray-800">{data.name}</div>
-                                   <div className="flex items-center text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded">
-                                       <BrainCircuit className="w-3 h-3 mr-1" /> Pattern Updated
-                                   </div>
-                               </div>
-                               <div className="flex items-center space-x-4 text-sm">
-                                   <div className="text-gray-600">Confirmed: <strong>{data.detectedQty} {data.detectedUnit}</strong></div>
-                               </div>
-                           </div>
-                       ))}
-                   </div>
-               </div>
-               <div className="p-4 bg-white border-t border-gray-200">
-                   <button onClick={confirmReceipt} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg shadow-emerald-200">
-                       Confirm & Update AI
-                   </button>
-               </div>
-           </div>
-       )}
-    </div>
-  );
-
   const DashboardView = () => (
     <div className="space-y-6 pb-20">
       <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-lg flex justify-between items-center">
@@ -944,35 +657,18 @@ export default function GroceryApp() {
                         Est. Duration: {item.predictedDuration} days
                     </div>
                     </div>
-
                     <div className="flex items-center gap-2">
                         {isInCart ? (
                              <>
                                  <div className="text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-lg text-xs font-bold flex items-center">
                                      <Check className="w-3 h-3 mr-1" /> Added
                                  </div>
-                                 <button
-                                    onClick={() => removeFromCart(item.id)}
-                                    className="bg-gray-200 p-1.5 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50"
-                                 >
-                                     <Trash2 className="w-4 h-4" />
-                                 </button>
+                                 <button onClick={() => removeFromCart(item.id)} className="bg-gray-200 p-1.5 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50"><Trash2 className="w-4 h-4" /></button>
                              </>
                         ) : (
-                            <button onClick={() => initiateAddToCart(item)} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center">
-                                <Plus className="w-4 h-4 mr-1" /> Add
-                            </button>
+                            <button onClick={() => initiateAddToCart(item)} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center"><Plus className="w-4 h-4 mr-1" /> Add</button>
                         )}
-                        {/* Skip Suggestion Button */}
-                        {!isInCart && (
-                            <button
-                                onClick={() => handleSkipCycle(item.id)}
-                                className="bg-gray-100 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                title="Skip for now"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
+                        {!isInCart && <button onClick={() => handleSkipCycle(item.id)} className="bg-gray-100 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50"><X className="w-4 h-4" /></button>}
                     </div>
                 </div>
               );
@@ -989,176 +685,6 @@ export default function GroceryApp() {
     </div>
   );
 
-  const PantryView = () => {
-    // Filter by search
-    const filteredItems = processedItems.filter(item =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    // Group by Category
-    const groupedItems = filteredItems.reduce((acc, item) => {
-      const cat = item.category || 'Other';
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(item);
-      return acc;
-    }, {});
-
-    // Sort categories alphabetically
-    const sortedCategories = Object.keys(groupedItems).sort();
-
-    return (
-      <div className="space-y-4 pb-20">
-        <div className="flex justify-between items-center mb-2 px-1">
-           <h1 className="text-2xl font-bold text-gray-900">My Pantry</h1>
-           <button onClick={() => setIsAddModalOpen(true)} className="text-indigo-600 text-sm font-semibold">+ Custom Item</button>
-        </div>
-
-        {/* Search Bar */}
-        <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center shadow-sm mb-4">
-          <Search className="w-5 h-5 text-gray-400 mr-2" />
-          <input
-            type="text"
-            placeholder="Search items..."
-            className="flex-1 outline-none text-gray-700 placeholder-gray-400"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-              <button onClick={() => setSearchQuery('')}>
-                  <X className="w-4 h-4 text-gray-400" />
-              </button>
-          )}
-        </div>
-
-        {dbError && (
-            <div className="bg-red-100 border border-red-200 text-red-700 p-4 rounded-xl mb-4 text-xs">
-                <p className="font-bold flex items-center"><AlertCircle className="w-4 h-4 mr-1" /> Connection Error</p>
-                <p>{dbError}</p>
-            </div>
-        )}
-
-        {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
-                <p className="text-gray-500">Syncing with cloud...</p>
-            </div>
-        ) : items.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-                <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Database className="w-8 h-8 text-indigo-500" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Pantry is Empty</h3>
-                <p className="text-gray-500 text-sm mb-6">You are connected as a new user. Load the standard list to get started.</p>
-                <button
-                  onClick={handleBulkSync}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 transition-colors flex items-center justify-center"
-                >
-                    <RefreshCw className="w-5 h-5 mr-2" /> Load Standard Items
-                </button>
-            </div>
-        ) : (
-        <div className="space-y-6">
-            {sortedCategories.map(category => (
-                <div key={category}>
-                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">{category}</h3>
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
-                        {groupedItems[category]
-                            .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically within category
-                            .map(item => {
-                                const isInCart = cart.find(c => c.id === item.id);
-                                return (
-                                    <div
-                                        key={item.id}
-                                        className={`p-4 flex items-center justify-between transition-colors ${
-                                            item.isOverdue ? 'bg-red-50' : 'bg-white'
-                                        }`}
-                                    >
-                                    <div className="flex items-center">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 ${
-                                            item.isOrdered ? 'bg-blue-100 text-blue-600' :
-                                            item.isOverdue ? 'bg-red-100 text-red-600' :
-                                            item.hasPattern ? 'bg-indigo-50 text-gray-800' : 'bg-gray-100 text-gray-400'
-                                        }`}>
-                                        {item.isOrdered ? <Truck className="w-5 h-5" /> :
-                                            item.isOverdue ? <AlertCircle className="w-5 h-5" /> :
-                                            item.hasPattern ? '🧠' : '❔'}
-                                        </div>
-                                        <div>
-                                        <div className={`text-sm font-bold ${item.isOverdue && !item.isOrdered ? 'text-red-700' : 'text-gray-700'}`}>
-                                            {item.name}
-                                        </div>
-                                        <div className={`text-xs flex items-center ${item.isOverdue && !item.isOrdered ? 'text-red-500' : 'text-gray-400'}`}>
-                                            {item.vendor} •
-                                            {item.isOrdered ? (
-                                                <span className="ml-1 text-blue-600 font-medium">On the Way</span>
-                                            ) : item.hasPattern ? (
-                                                <span className="ml-1 font-medium">
-                                                    Last: {item.daysSinceLastOrder}d | Est. Left: {item.predictedDuration - item.daysSinceLastOrder}d
-                                                </span>
-                                            ) : (
-                                                <span className="ml-1">Learning... ({item.orderCount} orders)</span>
-                                            )}
-                                        </div>
-                                        </div>
-                                    </div>
-
-                                    {item.isOrdered ? (
-                                        <div className="flex items-center gap-2">
-                                            {/* Not Delivered Button */}
-                                            <button
-                                                onClick={() => handleNotDelivered(item.id)}
-                                                className="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"
-                                                title="Not Delivered"
-                                            >
-                                                <XCircle className="w-4 h-4" />
-                                            </button>
-
-                                            {/* Received Button */}
-                                            <button
-                                                onClick={() => initiateManualReceive(item)}
-                                                className="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-blue-100 transition-colors"
-                                            >
-                                                <ClipboardCheck className="w-4 h-4 mr-1" />
-                                                Received?
-                                            </button>
-                                        </div>
-                                    ) : isInCart ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-emerald-500 font-medium text-sm flex items-center bg-emerald-50 px-3 py-1.5 rounded-lg">
-                                                <Check className="w-4 h-4 mr-1" /> Added
-                                            </div>
-                                            <button
-                                                onClick={() => removeFromCart(item.id)}
-                                                className="bg-gray-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-100"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => initiateAddToCart(item)}
-                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                item.isOverdue
-                                                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                                            }`}
-                                        >
-                                            Add
-                                        </button>
-                                    )}
-                                    </div>
-                                );
-                            })
-                        }
-                    </div>
-                </div>
-            ))}
-        </div>
-        )}
-      </div>
-    );
-  };
-
   const CartView = () => {
     const groupedCart = cart.reduce((acc, item) => {
       (acc[item.vendor] = acc[item.vendor] || []).push(item);
@@ -1172,9 +698,7 @@ export default function GroceryApp() {
           <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
             <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 font-medium">Your list is empty.</p>
-            <button onClick={() => setActiveTab('pantry')} className="text-sm text-indigo-600 mt-2 font-semibold">
-                Browse Pantry to Add
-            </button>
+            <button onClick={() => setActiveTab('pantry')} className="text-sm text-indigo-600 mt-2 font-semibold">Browse Pantry to Add</button>
           </div>
         ) : (
           Object.entries(groupedCart).map(([vendor, vendorItems]) => (
@@ -1190,29 +714,19 @@ export default function GroceryApp() {
                   <div key={item.id} className="p-4 flex justify-between items-center">
                     <div>
                         <div className="text-gray-800 font-medium">{item.name}</div>
-                        {/* Updated Cart Item Display */}
                         <div className="text-xs text-gray-400 font-medium mt-0.5 flex items-center">
-                            {item.packCount > 1 ? (
-                                <span className="text-indigo-600 font-bold bg-indigo-50 px-1 rounded mr-1">
-                                    {item.packCount} x
-                                </span>
-                            ) : null}
+                            {item.packCount > 1 ? <span className="text-indigo-600 font-bold bg-indigo-50 px-1 rounded mr-1">{item.packCount} x</span> : null}
                             {item.packetSize} {item.unit}
                         </div>
                     </div>
-                    <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 p-2">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 p-2"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
               </div>
               <div className="p-4 bg-gray-50 border-t border-gray-100">
                 <button onClick={() => handleCheckout(vendor)} className="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-100 transition-colors flex justify-center items-center shadow-sm">
                   <span className="mr-2">Copy List & WhatsApp</span>
-                  <div className="flex space-x-1">
-                      <Share2 className="w-4 h-4" />
-                      <ChevronRight className="w-4 h-4" />
-                  </div>
+                  <div className="flex space-x-1"><Share2 className="w-4 h-4" /><ChevronRight className="w-4 h-4" /></div>
                 </button>
               </div>
             </div>
@@ -1231,82 +745,58 @@ export default function GroceryApp() {
             <h1 className="text-xl font-bold tracking-tight text-indigo-900">PantryPilot</h1>
         </div>
         <div className="relative">
-             {cart.length > 0 && (
-                <div className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-pulse">
-                    {cart.length}
-                </div>
-             )}
-             <button onClick={() => setActiveTab('cart')}>
-                <ShoppingCart className="w-6 h-6 text-gray-600" />
-             </button>
+             {cart.length > 0 && <div className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-pulse">{cart.length}</div>}
+             <button onClick={() => setActiveTab('cart')}><ShoppingCart className="w-6 h-6 text-gray-600" /></button>
         </div>
       </div>
 
       <div className="p-4 h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar">
         {activeTab === 'dashboard' && <DashboardView />}
-        {activeTab === 'pantry' && <PantryView />}
+        {activeTab === 'pantry' && <PantryView
+            items={items} cart={cart} isLoading={isLoading} dbError={dbError} hasNewItems={hasNewItems}
+            onAddCustom={() => setIsAddModalOpen(true)}
+            onSync={handleBulkSync}
+            onAddToCart={initiateAddToCart}
+            onRemoveFromCart={removeFromCart}
+            onManualReceive={initiateManualReceive}
+            onNotDelivered={handleNotDelivered}
+        />}
         {activeTab === 'cart' && <CartView />}
       </div>
 
       {showNotification && (
         <div className="absolute top-20 left-4 right-4 bg-white rounded-xl shadow-xl p-4 border border-gray-100 z-40 animate-slide-down flex items-start gap-3">
-             <div className="bg-orange-100 p-2 rounded-full">
-                <Bell className="w-5 h-5 text-orange-600" />
-             </div>
-             <div className="flex-1">
-                 <h4 className="text-sm font-bold text-gray-900">Delivery Detected</h4>
-                 <p className="text-xs text-gray-500 mt-1">Order arrived? Scan receipt to update patterns.</p>
-             </div>
-             <button onClick={() => { startScan(); setShowNotification(false); }} className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">
-                 Scan
-             </button>
+             <div className="bg-orange-100 p-2 rounded-full"><Bell className="w-5 h-5 text-orange-600" /></div>
+             <div className="flex-1"><h4 className="text-sm font-bold text-gray-900">Delivery Detected</h4><p className="text-xs text-gray-500 mt-1">Order arrived? Scan receipt to update patterns.</p></div>
+             <button onClick={() => { setIsScanning(true); setShowNotification(false); }} className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">Scan</button>
         </div>
       )}
 
-      {/* MODALS */}
       {isScanning && <ScanView />}
       {isAddToCartModalOpen && <AddToCartModal />}
       {isReceiveModalOpen && <ReceiveModal />}
 
-      {/* DEVELOPER TOOLS */}
       {isAdminOpen && (
           <div className="absolute bottom-20 left-4 bg-gray-800 text-white p-4 rounded-xl shadow-xl z-50 w-64 animate-fade-in">
               <h3 className="text-sm font-bold mb-2 flex items-center"><Database className="w-4 h-4 mr-2" /> Database Admin</h3>
-
               <div className="mb-3 p-2 bg-gray-700 rounded-lg">
-                  <p className="text-[10px] text-gray-400 uppercase">Current User ID:</p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-[10px] text-gray-400 uppercase">Current User ID:</p>
+                    <button onClick={() => navigator.clipboard.writeText(user?.uid)} title="Copy ID"><Copy className="w-3 h-3 text-gray-400 hover:text-white" /></button>
+                  </div>
                   <p className="text-xs font-mono break-all">{user?.uid || 'Not Connected'}</p>
               </div>
-
               <p className="text-xs text-gray-400 mb-3">Sync local code changes to cloud DB.</p>
-              <button
-                onClick={handleBulkSync}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg"
-              >
-                  Sync Master List
-              </button>
+              <button onClick={handleBulkSync} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg">Sync Master List</button>
           </div>
       )}
 
       <div className="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-4 flex justify-between items-center z-10">
-        <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center space-y-1 ${activeTab === 'dashboard' ? 'text-indigo-600' : 'text-gray-400'}`}>
-          <TrendingUp className="w-6 h-6" />
-          <span className="text-xs font-medium">Overview</span>
-        </button>
-
-        <button onClick={() => setActiveTab('pantry')} className={`flex flex-col items-center space-y-1 ${activeTab === 'pantry' ? 'text-indigo-600' : 'text-gray-400'}`}>
-          <List className="w-6 h-6" />
-          <span className="text-xs font-medium">My Pantry</span>
-        </button>
-
+        <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center space-y-1 ${activeTab === 'dashboard' ? 'text-indigo-600' : 'text-gray-400'}`}><TrendingUp className="w-6 h-6" /><span className="text-xs font-medium">Overview</span></button>
+        <button onClick={() => setActiveTab('pantry')} className={`flex flex-col items-center space-y-1 ${activeTab === 'pantry' ? 'text-indigo-600' : 'text-gray-400'}`}><List className="w-6 h-6" /><span className="text-xs font-medium">My Pantry</span></button>
         <div className="relative">
-            <button onClick={() => setIsAdminOpen(!isAdminOpen)} className="absolute -top-10 -right-2 text-gray-300 hover:text-gray-600">
-                <Settings className="w-4 h-4" />
-            </button>
-            <button onClick={startScan} className={`flex flex-col items-center space-y-1 text-gray-400 hover:text-indigo-600`}>
-            <Camera className="w-6 h-6" />
-            <span className="text-xs font-medium">Scan</span>
-            </button>
+            <button onClick={() => setIsAdminOpen(!isAdminOpen)} className="absolute -top-10 -right-2 text-gray-300 hover:text-gray-600"><Settings className="w-4 h-4" /></button>
+            <button onClick={() => setIsScanning(true)} className={`flex flex-col items-center space-y-1 text-gray-400 hover:text-indigo-600`}><Camera className="w-6 h-6" /><span className="text-xs font-medium">Scan</span></button>
         </div>
       </div>
 
@@ -1315,23 +805,10 @@ export default function GroceryApp() {
           <div className="bg-white w-full rounded-2xl p-6 shadow-xl animate-slide-up">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Add New Staple</h2>
             <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Item Name</label>
-                <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Olive Oil" />
-              </div>
+              <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Item Name</label><input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Olive Oil" /></div>
               <div className="grid grid-cols-2 gap-4">
-                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vendor</label>
-                    <select value={newItem.vendor} onChange={(e) => setNewItem({...newItem, vendor: e.target.value})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200">
-                      {VENDORS.map(v => <option key={v} value={v}>{v}</option>)}
-                    </select>
-                 </div>
-                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
-                    <select value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200">
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                 </div>
+                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vendor</label><select value={newItem.vendor} onChange={(e) => setNewItem({...newItem, vendor: e.target.value})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200">{VENDORS.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label><select value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200">{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
               </div>
               <div className="flex gap-3 mt-6">
                 <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold">Cancel</button>
@@ -1341,7 +818,6 @@ export default function GroceryApp() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
