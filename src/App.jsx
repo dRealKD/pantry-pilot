@@ -18,7 +18,10 @@ import {
   Truck,
   Share2,
   Database,
-  Settings
+  Settings,
+  Loader2,
+  RefreshCw,
+  User
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -47,7 +50,7 @@ const UNITS = ['kg(s)', 'gm(s)', 'ltr', 'ml', 'pcs', 'pack', 'loaf', 'bunch', 'b
 const GENERIC_GROCERY_APPS = ['BigBasket', 'Swiggy Instamart', 'Zepto', 'Blinkit', 'Amazon Fresh'];
 const CATEGORIES = ['Vegetables', 'Fruits', 'Dairy', 'Meat', 'Bakery', 'Grains', 'Cooking', 'Beverages', 'Household'];
 
-// --- MASTER LIST (Edit this to update your database) ---
+// --- MASTER LIST ---
 const SEED_ITEMS = [
   { id: 'item_1', name: 'Full Cream Milk', category: 'Dairy', vendor: 'Swiggy Instamart', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: 'L' },
   { id: 'item_2', name: 'Curd/Dahi', category: 'Dairy', vendor: 'BigBasket', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 400, unit: 'g' },
@@ -78,7 +81,6 @@ const normalizeQuantity = (qty, unit) => {
   if (!qty) return 0;
   const val = parseFloat(qty);
   if (isNaN(val)) return 0;
-
   const u = unit ? unit.toLowerCase() : '';
   if (u.includes('kg') || u.includes('ltr')) return val * 1000;
   if (u.includes('gm') || u.includes('ml')) return val;
@@ -91,6 +93,8 @@ export default function GroceryApp() {
   const [cart, setCart] = useState([]);
   const [activeTab, setActiveTab] = useState('pantry');
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dbError, setDbError] = useState(null); // Track DB errors
 
   // UI States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -116,16 +120,22 @@ export default function GroceryApp() {
   // --- 1. AUTHENTICATION ---
   useEffect(() => {
     const initAuth = async () => {
-      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-        await signInWithCustomToken(auth, __initial_auth_token);
-      } else {
-        await signInAnonymously(auth);
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        console.error("Auth Error:", e);
+        setDbError(`Authentication Failed: ${e.message}`);
       }
     };
     initAuth();
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (!currentUser) setIsLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -133,12 +143,19 @@ export default function GroceryApp() {
   // --- 2. DATA SYNC (FIRESTORE) ---
   useEffect(() => {
     if (!user) return;
+    setIsLoading(true);
+    setDbError(null);
 
     const pantryRef = collection(db, 'artifacts', appId, 'users', user.uid, 'pantry');
     const unsubscribePantry = onSnapshot(pantryRef, (snapshot) => {
       const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setItems(fetchedItems);
-    }, (error) => console.error("Pantry sync error:", error));
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Pantry sync error:", error);
+      setDbError(`Database Error: ${error.message}. Check Permissions/Rules.`);
+      setIsLoading(false);
+    });
 
     const cartRef = collection(db, 'artifacts', appId, 'users', user.uid, 'cart');
     const unsubscribeCart = onSnapshot(cartRef, (snapshot) => {
@@ -174,7 +191,8 @@ export default function GroceryApp() {
              const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', item.id);
              batch.update(docRef, stats);
         });
-        batch.commit().then(() => console.log('Auto-cleanup completed'));
+        // Catch cleanup errors silently to not annoy user
+        batch.commit().catch(e => console.error("Auto-cleanup failed", e));
     };
 
     const interval = setInterval(checkAutoReceive, 60000);
@@ -227,7 +245,6 @@ export default function GroceryApp() {
     const today = new Date();
 
     const enrichedItems = items.map(item => {
-      // 1. Status: On the Way
       if (item.isOrdered) {
          return {
             ...item,
@@ -239,7 +256,6 @@ export default function GroceryApp() {
          };
       }
 
-      // 2. Status: New Item
       if (!item.lastOrdered) {
         return {
           ...item,
@@ -251,7 +267,6 @@ export default function GroceryApp() {
         };
       }
 
-      // 3. Status: Tracking & Prediction
       const lastOrder = new Date(item.lastOrdered);
       const diffTime = Math.abs(today - lastOrder);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -330,7 +345,7 @@ export default function GroceryApp() {
         setIsAddToCartModalOpen(false);
         setItemToAdd(null);
     } catch (e) {
-        console.error("Error adding to cart", e);
+        alert(`Error adding to cart: ${e.message}`);
     }
   };
 
@@ -343,18 +358,25 @@ export default function GroceryApp() {
     }
   };
 
-  // --- NEW: Name-Based Uniqueness Check ---
   const handleCreateNewItem = async () => {
-    if (!user) return;
+    if (!user) {
+        alert("Not authenticated. Cannot save.");
+        return;
+    }
+
+    if (!newItem.name || newItem.name.trim().length === 0) {
+        alert("Please enter a name for the item.");
+        return;
+    }
 
     const normalizedName = newItem.name.trim().toLowerCase();
-
-    // Check if name already exists (case-insensitive) in local state (which matches DB)
-    const exists = items.some(item => item.name.trim().toLowerCase() === normalizedName);
+    const exists = items && items.length > 0 && items.some(item =>
+        (item.name || '').trim().toLowerCase() === normalizedName
+    );
 
     if (exists) {
-        alert(`Item "${newItem.name}" already exists in your pantry!`);
-        return; // Stop execution
+        alert(`Duplicate: "${newItem.name}" is already in your pantry.`);
+        return;
     }
 
     const newItemId = `custom_${Date.now()}`;
@@ -373,6 +395,8 @@ export default function GroceryApp() {
         setIsAddModalOpen(false);
         setNewItem({ name: '', category: 'Vegetables', vendor: 'BigBasket', frequencyDays: 7, quantity: 1, unit: 'pcs' });
     } catch (e) {
+        // EXPLICIT ERROR ALERT
+        alert(`Failed to save item: ${e.message}\n\nCheck your database rules/permissions.`);
         console.error("Error creating item", e);
     }
   };
@@ -404,9 +428,13 @@ export default function GroceryApp() {
         batch.delete(cartRef);
     });
 
-    await batch.commit();
+    try {
+        await batch.commit();
+        alert(`Opening WhatsApp...\n\nList also copied to clipboard.`);
+    } catch (e) {
+        alert(`Checkout failed: ${e.message}`);
+    }
 
-    alert(`Opening WhatsApp with your list...\n\nList also copied to clipboard.`);
     setTimeout(() => {
         setShowNotification(true);
     }, 3000);
@@ -423,23 +451,20 @@ export default function GroceryApp() {
       try {
           await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemId), updates, { merge: true });
       } catch (e) {
-          console.error("Error receiving item", e);
+          alert(`Error receiving item: ${e.message}`);
       }
   };
 
-  // --- NEW: Bulk Sync with Name Checking ---
+  // --- BULK SYNC ---
   const handleBulkSync = async () => {
       if (!user) return;
-      if (!confirm("This will add any missing items (by name) from the Master List to your Database. Existing items will be preserved. Continue?")) return;
+      if (!confirm("Add missing items from Master List?")) return;
 
       const batch = writeBatch(db);
       let count = 0;
 
       SEED_ITEMS.forEach(seedItem => {
-          // Check if NAME exists in current DB items (Case-Insensitive)
-          // This prevents adding 'Milk' if 'item_1' (Milk) already exists
-          const exists = items.some(i => i.name.toLowerCase() === seedItem.name.toLowerCase());
-
+          const exists = items.some(i => (i.name || '').toLowerCase() === seedItem.name.toLowerCase());
           if (!exists) {
               const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', seedItem.id);
               batch.set(docRef, seedItem);
@@ -447,11 +472,15 @@ export default function GroceryApp() {
           }
       });
 
-      if (count > 0) {
-          await batch.commit();
-          alert(`Successfully added ${count} new items from Master List.`);
-      } else {
-          alert("Database is already up to date with Master List names.");
+      try {
+        if (count > 0) {
+            await batch.commit();
+            alert(`Successfully added ${count} new items.`);
+        } else {
+            alert("Database is already up to date.");
+        }
+      } catch (e) {
+          alert(`Sync failed: ${e.message}`);
       }
       setIsAdminOpen(false);
   };
@@ -495,10 +524,14 @@ export default function GroceryApp() {
         }
     });
 
-    await batch.commit();
-    setIsScanning(false);
-    setShowNotification(false);
-    setActiveTab('pantry');
+    try {
+        await batch.commit();
+        setIsScanning(false);
+        setShowNotification(false);
+        setActiveTab('pantry');
+    } catch (e) {
+        alert(`Receipt update failed: ${e.message}`);
+    }
   };
 
   // --- VIEWS ---
@@ -727,6 +760,33 @@ export default function GroceryApp() {
          <button onClick={() => setIsAddModalOpen(true)} className="text-indigo-600 text-sm font-semibold">+ Custom Item</button>
       </div>
 
+      {dbError && (
+          <div className="bg-red-100 border border-red-200 text-red-700 p-4 rounded-xl mb-4 text-xs">
+              <p className="font-bold flex items-center"><AlertCircle className="w-4 h-4 mr-1" /> Connection Error</p>
+              <p>{dbError}</p>
+          </div>
+      )}
+
+      {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
+              <p className="text-gray-500">Syncing with cloud...</p>
+          </div>
+      ) : items.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+              <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Database className="w-8 h-8 text-indigo-500" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Pantry is Empty</h3>
+              <p className="text-gray-500 text-sm mb-6">You are connected as a new user. Load the standard list to get started.</p>
+              <button
+                onClick={handleBulkSync}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 transition-colors flex items-center justify-center"
+              >
+                  <RefreshCw className="w-5 h-5 mr-2" /> Load Standard Items
+              </button>
+          </div>
+      ) : (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
           {processedItems.map(item => {
             const isInCart = cart.find(c => c.id === item.id);
@@ -801,6 +861,7 @@ export default function GroceryApp() {
             );
           })}
       </div>
+      )}
     </div>
   );
 
@@ -910,6 +971,13 @@ export default function GroceryApp() {
       {isAdminOpen && (
           <div className="absolute bottom-20 left-4 bg-gray-800 text-white p-4 rounded-xl shadow-xl z-50 w-64 animate-fade-in">
               <h3 className="text-sm font-bold mb-2 flex items-center"><Database className="w-4 h-4 mr-2" /> Database Admin</h3>
+
+              {/* Added User ID Display for Debugging */}
+              <div className="mb-3 p-2 bg-gray-700 rounded-lg">
+                  <p className="text-[10px] text-gray-400 uppercase">Current User ID:</p>
+                  <p className="text-xs font-mono break-all">{user?.uid || 'Not Connected'}</p>
+              </div>
+
               <p className="text-xs text-gray-400 mb-3">Sync local code changes to cloud DB.</p>
               <button
                 onClick={handleBulkSync}
