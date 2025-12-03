@@ -28,7 +28,7 @@ import {
   Search,
   Copy,
   ArrowDownCircle,
-  Clock // New Icon for pending
+  Clock
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -130,7 +130,6 @@ const PantryView = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 1. Separate Ordered vs Regular Items based on search
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -138,7 +137,6 @@ const PantryView = ({
   const orderedItems = filteredItems.filter(item => item.isOrdered);
   const regularItems = filteredItems.filter(item => !item.isOrdered);
 
-  // 2. Group Regular Items by Category
   const groupedItems = regularItems.reduce((acc, item) => {
     const cat = item.category || 'Other';
     if (!acc[cat]) acc[cat] = [];
@@ -260,7 +258,7 @@ const PantryView = ({
   );
 };
 
-// 2. Pending Orders Modal (New Component)
+// 2. Pending Orders Modal (Stable)
 const PendingOrdersModal = ({ items, onCancel, onManualReceive, onNotDelivered }) => {
     const orderedItems = items.filter(i => i.isOrdered);
 
@@ -703,6 +701,7 @@ export default function GroceryApp() {
       setItemToReceive(item);
       setReceiveConfig({ packCount: item.orderedPackCount || 1, packetSize: item.orderedPacketSize || item.quantity || 1, unit: item.unit || 'pcs' });
       setIsReceiveModalOpen(true);
+      setIsPendingOrdersModalOpen(false); // Close the pending list so the receive modal is visible
   };
 
   const confirmManualReceive = async () => {
@@ -710,19 +709,10 @@ export default function GroceryApp() {
       const today = new Date();
       const totalReceivedQty = receiveConfig.packCount * receiveConfig.packetSize;
       const updates = calculateReceivedStats(itemToReceive, today, totalReceivedQty, receiveConfig.unit);
-
-      // Preserve original default packet size/count logic (do not overwrite quantity/unit)
-      const finalUpdates = {
-          ...updates,
-      };
-
       try {
-          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemToReceive.id), finalUpdates, { merge: true });
+          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemToReceive.id), updates, { merge: true });
           setIsReceiveModalOpen(false);
           setItemToReceive(null);
-
-          // If called from the Pending modal, check if empty and close
-          // (Handled by React state updates mostly, but nice to have)
       } catch (e) { alert(`Error: ${e.message}`); }
   };
 
@@ -754,7 +744,6 @@ export default function GroceryApp() {
   };
 
   // --- VIEWS ---
-
   const DashboardView = () => (
     <div className="space-y-6 pb-20">
       <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-lg flex justify-between items-center">
