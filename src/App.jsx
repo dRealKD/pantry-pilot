@@ -28,7 +28,10 @@ import {
   Search,
   Copy,
   ArrowDownCircle,
-  Clock
+  Clock,
+  LogOut,
+  Lock,
+  Mail
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -37,7 +40,12 @@ import {
   getAuth,
   onAuthStateChanged,
   signInAnonymously,
-  signInWithCustomToken
+  signInWithCustomToken,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup, // NEW
+  GoogleAuthProvider, // NEW
+  signOut
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -111,6 +119,135 @@ const normalizeQuantity = (qty, unit) => {
   if (u.includes('kg') || u.includes('ltr')) return val * 1000;
   if (u.includes('gm') || u.includes('ml')) return val;
   return val;
+};
+
+// --- NEW COMPONENT: AUTH VIEW ---
+const AuthView = ({ onLoginSuccess }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+    } catch (err) {
+      console.error("Auth error", err);
+      let msg = "Authentication failed.";
+      if (err.code === 'auth/invalid-credential') msg = "Invalid email or password.";
+      if (err.code === 'auth/email-already-in-use') msg = "Email already registered. Try logging in.";
+      if (err.code === 'auth/weak-password') msg = "Password should be at least 6 characters.";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error("Google Auth error", err);
+      setError("Google Sign-In failed. Check your internet or popup blocker.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-8">
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-lg shadow-indigo-200">P</div>
+        </div>
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+        <p className="text-center text-gray-500 mb-8 text-sm">Sync your pantry across all your devices.</p>
+
+        {/* GOOGLE SIGN IN BUTTON */}
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all flex justify-center items-center mb-4"
+        >
+           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+           Sign in with Google
+        </button>
+
+        <div className="flex items-center mb-4">
+           <div className="flex-1 border-t border-gray-200"></div>
+           <span className="px-3 text-gray-400 text-xs">OR WITH EMAIL</span>
+           <div className="flex-1 border-t border-gray-200"></div>
+        </div>
+
+        <form onSubmit={handleAuth} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="name@example.com"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+          </div>
+
+          {error && <div className="bg-red-50 text-red-600 text-xs p-3 rounded-lg flex items-start"><AlertCircle className="w-4 h-4 mr-2 shrink-0" /> {error}</div>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 transition-all disabled:opacity-70 flex justify-center items-center mt-4"
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Sign In' : 'Create Account')}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => { setIsLogin(!isLogin); setError(''); }}
+            className="text-sm text-indigo-600 font-semibold hover:underline"
+          >
+            {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // --- STABLE COMPONENTS ---
@@ -486,9 +623,9 @@ export default function GroceryApp() {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
         }
+        // REMOVED: Automatic anonymous login. Now we wait for user action in AuthView.
+        // We will use onAuthStateChanged to determine if we show AuthView or App.
       } catch (e) {
         console.error("Auth Error:", e);
         setDbError(`Authentication Failed: ${e.message}`);
@@ -701,7 +838,7 @@ export default function GroceryApp() {
       setItemToReceive(item);
       setReceiveConfig({ packCount: item.orderedPackCount || 1, packetSize: item.orderedPacketSize || item.quantity || 1, unit: item.unit || 'pcs' });
       setIsReceiveModalOpen(true);
-      setIsPendingOrdersModalOpen(false); // Close the pending list so the receive modal is visible
+      setIsPendingOrdersModalOpen(false); // Close pending list to focus on modal
   };
 
   const confirmManualReceive = async () => {
@@ -743,127 +880,19 @@ export default function GroceryApp() {
       setIsAdminOpen(false);
   };
 
-  // --- VIEWS ---
-  const DashboardView = () => (
-    <div className="space-y-6 pb-20">
-      <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-lg flex justify-between items-center">
-          <span className="text-xs text-indigo-800 font-medium">Demo Control:</span>
-          <button onClick={() => handleCheckout('Swiggy Instamart')} className="text-xs bg-white border border-indigo-200 text-indigo-600 px-3 py-1 rounded shadow-sm">
-            Simulate "Place Order"
-          </button>
-      </div>
+  const handleLogout = async () => {
+      try {
+        await signOut(auth);
+        // User state will be updated by onAuthStateChanged
+      } catch(e) {
+        console.error("Sign out error", e);
+      }
+  }
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-2xl border border-emerald-200">
-          <div className="text-emerald-800 text-sm font-semibold mb-1">Smart Stock</div>
-          <div className="text-2xl font-bold text-emerald-900">
-             {items.filter(i => i.avgDailyConsumption !== null).length}
-          </div>
-          <div className="text-xs text-emerald-700 mt-1">Patterns learned</div>
-        </div>
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-2xl border border-amber-200">
-          <div className="text-amber-800 text-sm font-semibold mb-1">To Order</div>
-          <div className="text-2xl font-bold text-amber-900">{suggestions.length}</div>
-          <div className="text-xs text-amber-700 mt-1">Predictive suggestions</div>
-        </div>
-      </div>
-
-      {suggestions.length > 0 ? (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-rose-500" />
-            Restock Suggestions
-          </h2>
-          <div className="space-y-3">
-            {suggestions.map(item => {
-              const isInCart = cart.find(c => c.id === item.id);
-              return (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                    <div className="flex-1">
-                    <div className="font-semibold text-gray-800">{item.name}</div>
-                    <div className="text-xs text-gray-500 flex items-center mt-1">
-                        <span className={`w-2 h-2 rounded-full mr-2 ${item.stockStatus === 'Critical' ? 'bg-rose-500' : 'bg-amber-400'}`}></span>
-                        Est. Duration: {item.predictedDuration} days
-                    </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {isInCart ? (
-                             <>
-                                 <div className="text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-lg text-xs font-bold flex items-center">
-                                     <Check className="w-3 h-3 mr-1" /> Added
-                                 </div>
-                                 <button onClick={() => removeFromCart(item.id)} className="bg-gray-200 p-1.5 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50"><Trash2 className="w-4 h-4" /></button>
-                             </>
-                        ) : (
-                            <button onClick={() => initiateAddToCart(item)} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center"><Plus className="w-4 h-4 mr-1" /> Add</button>
-                        )}
-                        {!isInCart && <button onClick={() => handleSkipCycle(item.id)} className="bg-gray-100 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50"><X className="w-4 h-4" /></button>}
-                    </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-            <BrainCircuit className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-            <h3 className="text-gray-800 font-bold">AI is Learning</h3>
-            <p className="text-xs text-gray-400 mt-1">Order items from "My Pantry" to start establishing consumption patterns.</p>
-        </div>
-      )}
-    </div>
-  );
-
-  const CartView = () => {
-    const groupedCart = cart.reduce((acc, item) => {
-      (acc[item.vendor] = acc[item.vendor] || []).push(item);
-      return acc;
-    }, {});
-
-    return (
-      <div className="space-y-6 pb-20">
-        <h1 className="text-2xl font-bold text-gray-900 px-1">Shopping Lists</h1>
-        {cart.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-            <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">Your list is empty.</p>
-            <button onClick={() => setActiveTab('pantry')} className="text-sm text-indigo-600 mt-2 font-semibold">Browse Pantry to Add</button>
-          </div>
-        ) : (
-          Object.entries(groupedCart).map(([vendor, vendorItems]) => (
-            <div key={vendor} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                <div className="flex items-center">
-                   <h3 className="font-bold text-gray-800">{vendor}</h3>
-                   <span className="ml-2 bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{vendorItems.length} items</span>
-                </div>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {vendorItems.map(item => (
-                  <div key={item.id} className="p-4 flex justify-between items-center">
-                    <div>
-                        <div className="text-gray-800 font-medium">{item.name}</div>
-                        <div className="text-xs text-gray-400 font-medium mt-0.5 flex items-center">
-                            {item.packCount > 1 ? <span className="text-indigo-600 font-bold bg-indigo-50 px-1 rounded mr-1">{item.packCount} x</span> : null}
-                            {item.packetSize} {item.unit}
-                        </div>
-                    </div>
-                    <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 p-2"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                ))}
-              </div>
-              <div className="p-4 bg-gray-50 border-t border-gray-100">
-                <button onClick={() => handleCheckout(vendor)} className="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-100 transition-colors flex justify-center items-center shadow-sm">
-                  <span className="mr-2">Copy List & WhatsApp</span>
-                  <div className="flex space-x-1"><Share2 className="w-4 h-4" /><ChevronRight className="w-4 h-4" /></div>
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    );
-  };
+  // --- MAIN RENDER ---
+  if (!user && !isLoading) {
+    return <AuthView />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-gray-200">
@@ -892,7 +921,7 @@ export default function GroceryApp() {
       <div className="p-4 h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar">
         {activeTab === 'dashboard' && <DashboardView />}
         {activeTab === 'pantry' && <PantryView
-            items={processedItems} // FIX: Passing processedItems to PantryView
+            items={processedItems}
             cart={cart} isLoading={isLoading} dbError={dbError} hasNewItems={hasNewItems}
             onAddCustom={() => setIsAddModalOpen(true)}
             onSync={handleBulkSync}
@@ -932,7 +961,12 @@ export default function GroceryApp() {
                   <p className="text-xs font-mono break-all">{user?.uid || 'Not Connected'}</p>
               </div>
               <p className="text-xs text-gray-400 mb-3">Sync local code changes to cloud DB.</p>
-              <button onClick={handleBulkSync} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg">Sync Master List</button>
+              <button onClick={handleBulkSync} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg mb-3">Sync Master List</button>
+
+              <div className="border-t border-gray-600 my-2"></div>
+              <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center">
+                  <LogOut className="w-4 h-4 mr-2" /> Sign Out
+              </button>
           </div>
       )}
 
