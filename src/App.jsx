@@ -27,7 +27,8 @@ import {
   XCircle,
   Search,
   Copy,
-  ArrowDownCircle
+  ArrowDownCircle,
+  Clock // New Icon for pending
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -112,7 +113,7 @@ const normalizeQuantity = (qty, unit) => {
   return val;
 };
 
-// --- STABLE COMPONENTS (Defined Outside) ---
+// --- STABLE COMPONENTS ---
 
 const PantryView = ({
   items,
@@ -129,11 +130,16 @@ const PantryView = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
+  // 1. Separate Ordered vs Regular Items based on search
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const groupedItems = filteredItems.reduce((acc, item) => {
+  const orderedItems = filteredItems.filter(item => item.isOrdered);
+  const regularItems = filteredItems.filter(item => !item.isOrdered);
+
+  // 2. Group Regular Items by Category
+  const groupedItems = regularItems.reduce((acc, item) => {
     const cat = item.category || 'Other';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
@@ -182,6 +188,35 @@ const PantryView = ({
           </div>
       ) : (
       <div className="space-y-6">
+          {/* SECTION 1: ORDERED ITEMS (PRIORITY) */}
+          {orderedItems.length > 0 && (
+              <div>
+                  <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2 ml-1 flex items-center"><Clock className="w-4 h-4 mr-1" /> On the Way</h3>
+                  <div className="bg-blue-50/50 rounded-2xl shadow-sm border border-blue-100 overflow-hidden divide-y divide-blue-100">
+                      {orderedItems.map(item => (
+                          <div key={item.id} className="p-4 flex items-center justify-between bg-white">
+                              <div className="flex items-center">
+                                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 bg-blue-100 text-blue-600">
+                                      <Truck className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                      <div className="text-sm font-bold text-gray-800">{item.name}</div>
+                                      <div className="text-xs flex items-center text-blue-600 font-medium">
+                                          {item.vendor} • On the Way
+                                      </div>
+                                  </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                  <button onClick={() => onNotDelivered(item.id)} className="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"><XCircle className="w-4 h-4" /></button>
+                                  <button onClick={() => onManualReceive(item)} className="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-blue-100 transition-colors"><ClipboardCheck className="w-4 h-4 mr-1" /> Received?</button>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          )}
+
+          {/* SECTION 2: REGULAR CATEGORIES */}
           {sortedCategories.map(category => (
               <div key={category}>
                   <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">{category}</h3>
@@ -193,23 +228,18 @@ const PantryView = ({
                               return (
                                   <div key={item.id} className={`p-4 flex items-center justify-between transition-colors ${item.isOverdue ? 'bg-red-50' : 'bg-white'}`}>
                                   <div className="flex items-center">
-                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 ${item.isOrdered ? 'bg-blue-100 text-blue-600' : item.isOverdue ? 'bg-red-100 text-red-600' : item.hasPattern ? 'bg-indigo-50 text-gray-800' : 'bg-gray-100 text-gray-400'}`}>
-                                      {item.isOrdered ? <Truck className="w-5 h-5" /> : item.isOverdue ? <AlertCircle className="w-5 h-5" /> : item.hasPattern ? '🧠' : '❔'}
+                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 ${item.isOverdue ? 'bg-red-100 text-red-600' : item.hasPattern ? 'bg-indigo-50 text-gray-800' : 'bg-gray-100 text-gray-400'}`}>
+                                      {item.isOverdue ? <AlertCircle className="w-5 h-5" /> : item.hasPattern ? '🧠' : '❔'}
                                       </div>
                                       <div>
-                                      <div className={`text-sm font-bold ${item.isOverdue && !item.isOrdered ? 'text-red-700' : 'text-gray-700'}`}>{item.name}</div>
-                                      <div className={`text-xs flex items-center ${item.isOverdue && !item.isOrdered ? 'text-red-500' : 'text-gray-400'}`}>
+                                      <div className={`text-sm font-bold ${item.isOverdue ? 'text-red-700' : 'text-gray-700'}`}>{item.name}</div>
+                                      <div className={`text-xs flex items-center ${item.isOverdue ? 'text-red-500' : 'text-gray-400'}`}>
                                           {item.vendor} •
-                                          {item.isOrdered ? <span className="ml-1 text-blue-600 font-medium">On the Way</span> : item.hasPattern ? <span className="ml-1 font-medium">Last: {item.daysSinceLastOrder}d</span> : <span className="ml-1">Learning... ({item.orderCount} orders)</span>}
+                                          {item.hasPattern ? <span className="ml-1 font-medium">Last: {item.daysSinceLastOrder}d</span> : <span className="ml-1">Learning... ({item.orderCount} orders)</span>}
                                       </div>
                                       </div>
                                   </div>
-                                  {item.isOrdered ? (
-                                      <div className="flex items-center gap-2">
-                                          <button onClick={() => onNotDelivered(item.id)} className="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"><XCircle className="w-4 h-4" /></button>
-                                          <button onClick={() => onManualReceive(item)} className="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-blue-100 transition-colors"><ClipboardCheck className="w-4 h-4 mr-1" /> Received?</button>
-                                      </div>
-                                  ) : isInCart ? (
+                                  {isInCart ? (
                                       <div className="flex items-center gap-2">
                                           <div className="text-emerald-500 font-medium text-sm flex items-center bg-emerald-50 px-3 py-1.5 rounded-lg"><Check className="w-4 h-4 mr-1" /> Added</div>
                                           <button onClick={() => onRemoveFromCart(item.id)} className="bg-gray-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-100"><Trash2 className="w-4 h-4" /></button>
@@ -228,6 +258,52 @@ const PantryView = ({
       )}
     </div>
   );
+};
+
+// 2. Pending Orders Modal (New Component)
+const PendingOrdersModal = ({ items, onCancel, onManualReceive, onNotDelivered }) => {
+    const orderedItems = items.filter(i => i.isOrdered);
+
+    return (
+        <div className="absolute inset-0 bg-black/50 z-[70] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white w-full rounded-2xl p-6 shadow-xl animate-slide-up max-h-[80vh] flex flex-col">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-gray-800 flex items-center"><Truck className="w-6 h-6 text-blue-600 mr-2"/> Pending Deliveries</h2>
+                    <button onClick={onCancel} className="bg-gray-100 p-2 rounded-full"><X className="w-5 h-5 text-gray-600" /></button>
+                </div>
+
+                <div className="overflow-y-auto custom-scrollbar flex-1 space-y-3">
+                    {orderedItems.length === 0 ? (
+                        <p className="text-center text-gray-500 py-8">No items currently on the way.</p>
+                    ) : orderedItems.map(item => (
+                        <div key={item.id} className="p-4 border border-blue-100 bg-blue-50/30 rounded-xl flex flex-col gap-3">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="font-bold text-gray-800">{item.name}</div>
+                                    <div className="text-xs text-gray-500">{item.vendor}</div>
+                                </div>
+                                <div className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded">Ordered</div>
+                            </div>
+                            <div className="flex gap-2 pt-2 border-t border-blue-100/50">
+                                <button
+                                    onClick={() => onNotDelivered(item.id)}
+                                    className="flex-1 py-2 bg-white border border-gray-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-50"
+                                >
+                                    Not Delivered
+                                </button>
+                                <button
+                                    onClick={() => onManualReceive(item)}
+                                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700"
+                                >
+                                    Confirm Receipt
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const AddToCartModal = ({ item, config, setConfig, onCancel, onConfirm }) => (
@@ -321,6 +397,52 @@ const AddToCartModal = ({ item, config, setConfig, onCancel, onConfirm }) => (
     </div>
   );
 
+  const ScanView = () => (
+    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+       <button onClick={() => setIsScanning(false)} className="absolute top-4 right-4 text-white z-50 p-2 bg-gray-800/50 rounded-full">
+         <X className="w-6 h-6" />
+       </button>
+       {scanStep === 'camera' && (
+           <div className="flex-1 flex flex-col items-center justify-center relative">
+               <div className="w-full h-full absolute inset-0 bg-gray-900">
+                   <div className="w-full h-full flex items-center justify-center opacity-30">
+                       <p className="text-white text-lg">Camera Feed</p>
+                   </div>
+               </div>
+               <div className="w-64 h-80 border-2 border-emerald-500 rounded-lg relative z-10 flex items-center justify-center">
+                    <div className="w-full h-0.5 bg-emerald-500 absolute top-0 animate-scan"></div>
+               </div>
+               <p className="text-white mt-8 z-10 bg-black/50 px-4 py-2 rounded-full">Align receipt within frame</p>
+               <button onClick={() => { setScanStep('processing'); setTimeout(() => { setScannedData([]); setScanStep('review'); }, 2000); }} className="absolute bottom-10 w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center">
+                   <div className="w-12 h-12 bg-emerald-600 rounded-full"></div>
+               </button>
+           </div>
+       )}
+       {scanStep === 'processing' && (
+           <div className="flex-1 flex flex-col items-center justify-center bg-gray-900">
+               <ScanLine className="w-16 h-16 text-emerald-500 animate-pulse mb-4" />
+               <h2 className="text-xl font-bold text-white">Learning Patterns...</h2>
+           </div>
+       )}
+       {scanStep === 'review' && (
+           <div className="flex-1 bg-gray-50 flex flex-col">
+               <div className="bg-white p-4 border-b border-gray-200 shadow-sm mt-12 rounded-t-2xl flex-1">
+                   <h2 className="text-xl font-bold text-gray-800 mb-1">Receipt Processed</h2>
+                   <p className="text-sm text-gray-500 mb-6">We'll update your usage frequency based on this.</p>
+                   <div className="space-y-4">
+                       <p className="text-gray-500 text-center">Demo: No items scanned.</p>
+                   </div>
+               </div>
+               <div className="p-4 bg-white border-t border-gray-200">
+                   <button onClick={() => { setIsScanning(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg shadow-emerald-200">
+                       Done
+                   </button>
+               </div>
+           </div>
+       )}
+    </div>
+  );
+
 // --- MAIN COMPONENT ---
 
 export default function GroceryApp() {
@@ -337,6 +459,7 @@ export default function GroceryApp() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddToCartModalOpen, setIsAddToCartModalOpen] = useState(false);
   const [itemToAdd, setItemToAdd] = useState(null);
+  const [isPendingOrdersModalOpen, setIsPendingOrdersModalOpen] = useState(false); // NEW STATE
 
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
   const [itemToReceive, setItemToReceive] = useState(null);
@@ -356,6 +479,8 @@ export default function GroceryApp() {
     quantity: 1,
     unit: 'pcs'
   });
+
+  const orderedItemsCount = useMemo(() => items.filter(i => i.isOrdered).length, [items]);
 
   // --- AUTH ---
   useEffect(() => {
@@ -585,10 +710,19 @@ export default function GroceryApp() {
       const today = new Date();
       const totalReceivedQty = receiveConfig.packCount * receiveConfig.packetSize;
       const updates = calculateReceivedStats(itemToReceive, today, totalReceivedQty, receiveConfig.unit);
+
+      // Preserve original default packet size/count logic (do not overwrite quantity/unit)
+      const finalUpdates = {
+          ...updates,
+      };
+
       try {
-          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemToReceive.id), updates, { merge: true });
+          await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'pantry', itemToReceive.id), finalUpdates, { merge: true });
           setIsReceiveModalOpen(false);
           setItemToReceive(null);
+
+          // If called from the Pending modal, check if empty and close
+          // (Handled by React state updates mostly, but nice to have)
       } catch (e) { alert(`Error: ${e.message}`); }
   };
 
@@ -742,52 +876,6 @@ export default function GroceryApp() {
     );
   };
 
-  const ScanView = () => (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
-       <button onClick={() => setIsScanning(false)} className="absolute top-4 right-4 text-white z-50 p-2 bg-gray-800/50 rounded-full">
-         <X className="w-6 h-6" />
-       </button>
-       {scanStep === 'camera' && (
-           <div className="flex-1 flex flex-col items-center justify-center relative">
-               <div className="w-full h-full absolute inset-0 bg-gray-900">
-                   <div className="w-full h-full flex items-center justify-center opacity-30">
-                       <p className="text-white text-lg">Camera Feed</p>
-                   </div>
-               </div>
-               <div className="w-64 h-80 border-2 border-emerald-500 rounded-lg relative z-10 flex items-center justify-center">
-                    <div className="w-full h-0.5 bg-emerald-500 absolute top-0 animate-scan"></div>
-               </div>
-               <p className="text-white mt-8 z-10 bg-black/50 px-4 py-2 rounded-full">Align receipt within frame</p>
-               <button onClick={() => { setScanStep('processing'); setTimeout(() => { setScannedData([]); setScanStep('review'); }, 2000); }} className="absolute bottom-10 w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center">
-                   <div className="w-12 h-12 bg-emerald-600 rounded-full"></div>
-               </button>
-           </div>
-       )}
-       {scanStep === 'processing' && (
-           <div className="flex-1 flex flex-col items-center justify-center bg-gray-900">
-               <ScanLine className="w-16 h-16 text-emerald-500 animate-pulse mb-4" />
-               <h2 className="text-xl font-bold text-white">Learning Patterns...</h2>
-           </div>
-       )}
-       {scanStep === 'review' && (
-           <div className="flex-1 bg-gray-50 flex flex-col">
-               <div className="bg-white p-4 border-b border-gray-200 shadow-sm mt-12 rounded-t-2xl flex-1">
-                   <h2 className="text-xl font-bold text-gray-800 mb-1">Receipt Processed</h2>
-                   <p className="text-sm text-gray-500 mb-6">We'll update your usage frequency based on this.</p>
-                   <div className="space-y-4">
-                       <p className="text-gray-500 text-center">Demo: No items scanned.</p>
-                   </div>
-               </div>
-               <div className="p-4 bg-white border-t border-gray-200">
-                   <button onClick={() => { setIsScanning(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg shadow-emerald-200">
-                       Done
-                   </button>
-               </div>
-           </div>
-       )}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-gray-200">
 
@@ -796,9 +884,19 @@ export default function GroceryApp() {
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">P</div>
             <h1 className="text-xl font-bold tracking-tight text-indigo-900">PantryPilot</h1>
         </div>
-        <div className="relative">
-             {cart.length > 0 && <div className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-pulse">{cart.length}</div>}
-             <button onClick={() => setActiveTab('cart')}><ShoppingCart className="w-6 h-6 text-gray-600" /></button>
+        <div className="relative flex items-center gap-4">
+             {/* Pending Orders Icon */}
+             {orderedItemsCount > 0 && (
+                 <button onClick={() => setIsPendingOrdersModalOpen(true)} className="relative">
+                     <Truck className="w-6 h-6 text-blue-600" />
+                     <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-pulse">{orderedItemsCount}</div>
+                 </button>
+             )}
+
+             <div className="relative">
+                {cart.length > 0 && <div className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-pulse">{cart.length}</div>}
+                <button onClick={() => setActiveTab('cart')}><ShoppingCart className="w-6 h-6 text-gray-600" /></button>
+             </div>
         </div>
       </div>
 
@@ -821,7 +919,10 @@ export default function GroceryApp() {
         <div className="absolute top-20 left-4 right-4 bg-white rounded-xl shadow-xl p-4 border border-gray-100 z-40 animate-slide-down flex items-start gap-3">
              <div className="bg-orange-100 p-2 rounded-full"><Bell className="w-5 h-5 text-orange-600" /></div>
              <div className="flex-1"><h4 className="text-sm font-bold text-gray-900">Delivery Detected</h4><p className="text-xs text-gray-500 mt-1">Order arrived? Scan receipt to update patterns.</p></div>
-             <button onClick={() => { setIsScanning(true); setShowNotification(false); }} className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">Scan</button>
+             <div className="flex gap-2">
+                <button onClick={() => setShowNotification(false)} className="text-gray-500 text-xs px-2 hover:bg-gray-100 rounded">Dismiss</button>
+                <button onClick={() => { setIsScanning(true); setShowNotification(false); }} className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">Scan</button>
+             </div>
         </div>
       )}
 
@@ -829,6 +930,7 @@ export default function GroceryApp() {
       {isScanning && <ScanView />}
       {isAddToCartModalOpen && <AddToCartModal item={itemToAdd} config={addConfig} setConfig={setAddConfig} onCancel={() => setIsAddToCartModalOpen(false)} onConfirm={confirmAddToCart} />}
       {isReceiveModalOpen && <ReceiveModal item={itemToReceive} config={receiveConfig} setConfig={setReceiveConfig} onCancel={() => setIsReceiveModalOpen(false)} onConfirm={confirmManualReceive} />}
+      {isPendingOrdersModalOpen && <PendingOrdersModal items={processedItems} onCancel={() => setIsPendingOrdersModalOpen(false)} onManualReceive={initiateManualReceive} onNotDelivered={handleNotDelivered} />}
 
       {isAdminOpen && (
           <div className="absolute bottom-20 left-4 bg-gray-800 text-white p-4 rounded-xl shadow-xl z-50 w-64 animate-fade-in">
