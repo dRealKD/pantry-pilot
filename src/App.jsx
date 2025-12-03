@@ -32,7 +32,7 @@ import {
   LogOut,
   Lock,
   Mail,
-  FileJson // New Icon for Export
+  FileJson
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -69,31 +69,64 @@ const CATEGORIES = ['Vegetables', 'Fruits', 'Dairy', 'Meat', 'Bakery', 'Grains',
 // --- MASTER LIST ---
 const SEED_ITEMS = [
   { id: 'custom_1764252000001', name: 'Chicken Bites (Boneless)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 250, unit: 'g' },
-  { id: 'custom_1764252000002', name: 'Chicken Soup Pieces (Frozen)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: 'g' },
-  { id: 'custom_1764252000003', name: 'Chicken Mince', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000004', name: 'Chicken Curry Cut (Skinless)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000005', name: 'Chicken Boneless Breast', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000006', name: 'Chicken Boneless Thigh', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000007', name: 'Chicken Leg', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000008', name: 'Chicken Thigh (Bone In)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000009', name: 'Chicken Smoked Ham', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: 'g' },
-  { id: 'custom_1764252000010', name: 'Chicken Breakfast Sausage', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
-  { id: 'custom_1764252000011', name: 'Chicken Seekh Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: 'g' },
-  { id: 'custom_1764252000012', name: 'Chicken Shammi Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
-  { id: 'custom_1764252000013', name: 'Chicken Pepperoni', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 100, unit: 'g' },
-  { id: 'custom_1764252000014', name: 'Chicken Galouti Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
-  { id: 'custom_1764252000015', name: 'Chicken Breast Bacon', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
-  { id: 'custom_1764252000016', name: 'Mutton Curry Cut (Rajastan)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000017', name: 'Mutton Sheekh Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: 'g' },
-  { id: 'custom_1764252000018', name: 'Mutton Shammi Kebab', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
-  { id: 'custom_1764252000019', name: 'Premium Mutton Boneless (Rajasthan)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000020', name: 'Mutton Mince (Rajasthan)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: 'g' },
-  { id: 'custom_1764252000021', name: 'Pork Mince', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 250, unit: 'g' },
-  { id: 'custom_1764252000022', name: 'Breakfast Bacon', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 300, unit: 'g' },
-  { id: 'custom_1764252000023', name: 'Streaky Bacon', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: 'g' },
-  { id: 'custom_1764252000024', name: 'Premium Pork Pepperoni', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 100, unit: 'g' },
-  { id: 'custom_1764252000025', name: 'Pork Smoked Ham', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: 'g' },
-  { id: 'custom_1764252000026', name: 'Double Smoked Pork Ham', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: 'g' },
+  { id: "custom_1764251870502", name: "Olive Oil", category: "Cooking", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252000001", name: "Chicken Bites (Boneless)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 250, unit: "g" },
+  { id: "custom_1764252000002", name: "Chicken Soup Pieces (Frozen)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: "g" },
+  { id: "custom_1764252000003", name: "Chicken Mince", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
+  { id: "custom_1764252000004", name: "Chicken Curry Cut (Skinless)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
+  { id: "custom_1764252000005", name: "Chicken Boneless Breast", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 1000, lastOrdered: null, orderCount: 0, quantity: 1000, unit: "gm" },
+  { id: "custom_1764252000006", name: "Chicken Boneless Thigh", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
+  { id: "custom_1764252000007", name: "Chicken Leg", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
+  { id: "custom_1764252000008", name: "Chicken Thigh (Bone In)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
+  { id: "custom_1764252000009", name: "Chicken Smoked Ham", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: "g" },
+  { id: "custom_1764252000010", name: "Chicken Breakfast Sausage", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: "g" },
+  { id: "custom_1764252000011", name: "Chicken Seekh Kebab", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: "g" },
+  { id: "custom_1764252000012", name: "Chicken Shammi Kebab", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: "g" },
+  { id: "custom_1764252000013", name: "Chicken Pepperoni", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 100, unit: "g" },
+  { id: "custom_1764252000014", name: "Chicken Galouti Kebab", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: "g" },
+  { id: "custom_1764252000015", name: "Chicken Breast Bacon", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: "g" },
+  { id: "custom_1764252000016", name: "Mutton Curry Cut (Rajastan)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
+  { id: "custom_1764252000017", name: "Mutton Sheekh Kebab", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: "g" },
+  { id: "custom_1764252000018", name: "Mutton Shammi Kebab", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: "g" },
+  { id: "custom_1764252000019", name: "Premium Mutton Boneless (Rajasthan)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
+  { id: "custom_1764252000020", name: "Mutton Mince (Rajasthan)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
+  { id: "custom_1764252000021", name: "Pork Mince", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 250, unit: "g" },
+  { id: "custom_1764252000022", name: "Breakfast Bacon", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 300, unit: "g" },
+  { id: "custom_1764252000023", name: "Streaky Bacon", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: "g" },
+  { id: "custom_1764252000024", name: "Premium Pork Pepperoni", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 100, unit: "g" },
+  { id: "custom_1764252000025", name: "Pork Smoked Ham", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 200, unit: "g" },
+  { id: "custom_1764252000026", name: "Double Smoked Pork Ham", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 150, unit: "g" },
+  { id: "custom_1764252131898", name: "Potato", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252139792", name: "Onions", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs"},
+  { id: "custom_1764252156458", name: "Bhindi", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252165935", name: "Turya", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252187889", name: "Corriander", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252202350", name: "Mint", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252219756", name: "Eggs", category: "Dairy", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252230190", name: "Cauliflower", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252319680", name: "French Beans", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252330431", name: "Brinjal", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252347211", name: "Garlic", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs"},
+  { id: "custom_1764252354415", name: "Ginger", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252680079", name: "Bread", category: "Bakery", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252691434", name: "Tomatoes", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252723897", name: "Methi", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764252736590", name: "Spinach", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764425171848", name: "Green Chillies", category: "Vegetables", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764425226706", name: "Rice", category: "Grains", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764425274023", name: "Moong Daal", category: "Grains", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
+  { id: "custom_1764730128098", name: "Toilet Tissue Paper Roll", category: "Household", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 18, lastOrdered: null, orderCount: 0, quantity: 18, unit: "pcs" },
+  { id: "custom_1764730284339", name: "Dishwash Liquid Gel", category: "Household", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 500, lastOrdered: null, orderCount: 0, quantity: 500, unit: "ml" },
+  { id: "custom_1764730340120", name: "Butter", category: "Dairy", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 100, lastOrdered: null, orderCount: 0, quantity: 100, unit: "gm" },
+  { id: "custom_1764730380551", name: "Cheese Cubes", category: "Dairy", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 200, lastOrdered: null, orderCount: 0, quantity: 200, unit: "gm" },
+  { id: "custom_1764730461300", name: "Phool Makhana", category: "Bakery", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 200, lastOrdered: null, orderCount: 0, quantity: 200, unit: "gm" },
+  { id: "custom_1764730500021", name: "Raisins", category: "Fruits", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 200, lastOrdered: null, orderCount: 0, quantity: 200, unit: "gm" },
+  { id: "custom_1764730534880", name: "Almonds", category: "Fruits", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 500, lastOrdered: null, orderCount: 0, quantity: 500, unit: "gm" },
+  { id: "custom_1764730545424", name: "Cashew Nuts", category: "Fruits", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 500, lastOrdered: null, orderCount: 0, quantity: 500, unit: "gm" },
+  { id: "custom_1764730619866", name: "Sanitary Pads", category: "Household", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 28, lastOrdered: null, orderCount: 0, quantity: 28, unit: "pcs" },
+  { id: "custom_1764730695585", name: "Floor Surface Liquid", category: "Household", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 500, lastOrdered: null, orderCount: 0, quantity: 500, unit: "ml" },
+  { id: "custom_1764746929789", name: "Testing 2", category: "Beverages", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 2, lastOrdered: null, orderCount: 0, quantity: 2, unit: "L" },
+  { id: "custom_1764771538857", name: "Classic French Ham", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: 7, avgDailyConsumption: null, lastQuantity: 100, lastOrdered: null, orderCount: 0, quantity: 100, unit: "gm" },
 ];
 
 // --- FIREBASE INIT ---
@@ -123,7 +156,7 @@ const normalizeQuantity = (qty, unit) => {
 };
 
 // --- AUTH COMPONENT ---
-const AuthView = ({ onLoginSuccess }) => {
+const AuthView = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -445,7 +478,19 @@ const AddToCartModal = ({ item, config, setConfig, onCancel, onConfirm }) => (
                    <h2 className="text-xl font-bold text-gray-800 mb-1">Receipt Processed</h2>
                    <p className="text-sm text-gray-500 mb-6">We'll update your usage frequency based on this.</p>
                    <div className="space-y-4">
-                       <p className="text-gray-500 text-center">Demo: No items scanned.</p>
+                       {scannedData.map((data, idx) => (
+                           <div key={idx} className="p-4 rounded-xl border border-gray-200 bg-white">
+                               <div className="flex justify-between items-start mb-2">
+                                   <div className="font-semibold text-gray-800">{data.name}</div>
+                                   <div className="flex items-center text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded">
+                                       <BrainCircuit className="w-3 h-3 mr-1" /> Pattern Updated
+                                   </div>
+                               </div>
+                               <div className="flex items-center space-x-4 text-sm">
+                                   <div className="text-gray-600">Confirmed: <strong>{data.detectedQty} {data.detectedUnit}</strong></div>
+                               </div>
+                           </div>
+                       ))}
                    </div>
                </div>
                <div className="p-4 bg-white border-t border-gray-200">
@@ -503,9 +548,8 @@ export default function GroceryApp() {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          // REMOVED auto-anonymous login to force explicit login/signup
         }
+        // No auto-login as per request. AuthView handles explicit login.
       } catch (e) {
         console.error("Auth Error:", e);
         setDbError(`Authentication Failed: ${e.message}`);
@@ -514,8 +558,14 @@ export default function GroceryApp() {
     initAuth();
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (!currentUser) setIsLoading(false);
+      if (currentUser && currentUser.isAnonymous) {
+        // Enforce strict login: Logout if anonymous
+        signOut(auth).catch(console.error);
+        setUser(null);
+      } else {
+        setUser(currentUser);
+      }
+      setIsLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -759,9 +809,7 @@ export default function GroceryApp() {
       setIsAdminOpen(false);
   };
 
-  // --- ADDED: Export Functionality ---
   const handleExportSeed = () => {
-    // Filter only relevant fields for seed data
     const cleanItems = items.map(item => ({
       id: item.id,
       name: item.name,
@@ -771,23 +819,19 @@ export default function GroceryApp() {
       frequencyDays: item.frequencyDays,
       avgDailyConsumption: item.avgDailyConsumption,
       lastQuantity: item.lastQuantity || null,
-      lastOrdered: null, // Strip personal dates
+      lastOrdered: null,
       orderCount: 0,
       quantity: item.quantity,
       unit: item.unit
     }));
-
     const jsonString = JSON.stringify(cleanItems, null, 2);
     navigator.clipboard.writeText(jsonString);
-    alert("Data copied to clipboard! Paste this into the SEED_ITEMS array in your code.");
+    alert("Data copied to clipboard!");
   };
 
   const handleLogout = async () => {
-      try {
-        await signOut(auth);
-      } catch(e) {
-        console.error("Sign out error", e);
-      }
+      try { await signOut(auth); }
+      catch(e) { console.error("Sign out error", e); }
   }
 
   // --- MAIN RENDER ---
@@ -804,7 +848,6 @@ export default function GroceryApp() {
             <h1 className="text-xl font-bold tracking-tight text-indigo-900">PantryPilot</h1>
         </div>
         <div className="relative flex items-center gap-4">
-             {/* Pending Orders Icon */}
              {orderedItemsCount > 0 && (
                  <button onClick={() => setIsPendingOrdersModalOpen(true)} className="relative">
                      <Truck className="w-6 h-6 text-blue-600" />
