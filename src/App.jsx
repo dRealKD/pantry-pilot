@@ -31,7 +31,8 @@ import {
   Clock,
   LogOut,
   Lock,
-  Mail
+  Mail,
+  FileJson // New Icon for Export
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -43,8 +44,8 @@ import {
   signInWithCustomToken,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup, // NEW
-  GoogleAuthProvider, // NEW
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut
 } from 'firebase/auth';
 import {
@@ -121,7 +122,7 @@ const normalizeQuantity = (qty, unit) => {
   return val;
 };
 
-// --- NEW COMPONENT: AUTH VIEW ---
+// --- AUTH COMPONENT ---
 const AuthView = ({ onLoginSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -175,18 +176,8 @@ const AuthView = ({ onLoginSuccess }) => {
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
         <p className="text-center text-gray-500 mb-8 text-sm">Sync your pantry across all your devices.</p>
 
-        {/* GOOGLE SIGN IN BUTTON */}
-        <button
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all flex justify-center items-center mb-4"
-        >
-           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
+        <button onClick={handleGoogleLogin} disabled={loading} className="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all flex justify-center items-center mb-4">
+           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
            Sign in with Google
         </button>
 
@@ -201,47 +192,23 @@ const AuthView = ({ onLoginSuccess }) => {
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="name@example.com"
-                required
-              />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="name@example.com" required />
             </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="••••••••"
-                required
-              />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••" required />
             </div>
           </div>
-
           {error && <div className="bg-red-50 text-red-600 text-xs p-3 rounded-lg flex items-start"><AlertCircle className="w-4 h-4 mr-2 shrink-0" /> {error}</div>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 transition-all disabled:opacity-70 flex justify-center items-center mt-4"
-          >
+          <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 transition-all disabled:opacity-70 flex justify-center items-center mt-4">
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Sign In' : 'Create Account')}
           </button>
         </form>
-
         <div className="mt-6 text-center">
-          <button
-            onClick={() => { setIsLogin(!isLogin); setError(''); }}
-            className="text-sm text-indigo-600 font-semibold hover:underline"
-          >
+          <button onClick={() => { setIsLogin(!isLogin); setError(''); }} className="text-sm text-indigo-600 font-semibold hover:underline">
             {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
           </button>
         </div>
@@ -251,36 +218,17 @@ const AuthView = ({ onLoginSuccess }) => {
 };
 
 // --- STABLE COMPONENTS ---
-
-const PantryView = ({
-  items,
-  cart,
-  isLoading,
-  dbError,
-  hasNewItems,
-  onAddCustom,
-  onSync,
-  onAddToCart,
-  onRemoveFromCart,
-  onManualReceive,
-  onNotDelivered
-}) => {
+const PantryView = ({ items, cart, isLoading, dbError, hasNewItems, onAddCustom, onSync, onAddToCart, onRemoveFromCart, onManualReceive, onNotDelivered }) => {
   const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
+  const filteredItems = items.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const orderedItems = filteredItems.filter(item => item.isOrdered);
   const regularItems = filteredItems.filter(item => !item.isOrdered);
-
   const groupedItems = regularItems.reduce((acc, item) => {
     const cat = item.category || 'Other';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
     return acc;
   }, {});
-
   const sortedCategories = Object.keys(groupedItems).sort();
 
   return (
@@ -299,14 +247,7 @@ const PantryView = ({
 
       <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center shadow-sm mb-4">
         <Search className="w-5 h-5 text-gray-400 mr-2" />
-        <input
-          type="text"
-          placeholder="Search items..."
-          className="flex-1 outline-none text-gray-700 placeholder-gray-400"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-        />
+        <input type="text" placeholder="Search items..." className="flex-1 outline-none text-gray-700 placeholder-gray-400" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }} />
         {searchQuery && <button onClick={() => setSearchQuery('')}><X className="w-4 h-4 text-gray-400" /></button>}
       </div>
 
@@ -323,7 +264,7 @@ const PantryView = ({
           </div>
       ) : (
       <div className="space-y-6">
-          {/* SECTION 1: ORDERED ITEMS (PRIORITY) */}
+          {/* ORDERED ITEMS */}
           {orderedItems.length > 0 && (
               <div>
                   <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2 ml-1 flex items-center"><Clock className="w-4 h-4 mr-1" /> On the Way</h3>
@@ -331,15 +272,8 @@ const PantryView = ({
                       {orderedItems.map(item => (
                           <div key={item.id} className="p-4 flex items-center justify-between bg-white">
                               <div className="flex items-center">
-                                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 bg-blue-100 text-blue-600">
-                                      <Truck className="w-5 h-5" />
-                                  </div>
-                                  <div>
-                                      <div className="text-sm font-bold text-gray-800">{item.name}</div>
-                                      <div className="text-xs flex items-center text-blue-600 font-medium">
-                                          {item.vendor} • On the Way
-                                      </div>
-                                  </div>
+                                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg mr-3 bg-blue-100 text-blue-600"><Truck className="w-5 h-5" /></div>
+                                  <div><div className="text-sm font-bold text-gray-800">{item.name}</div><div className="text-xs flex items-center text-blue-600 font-medium">{item.vendor} • On the Way</div></div>
                               </div>
                               <div className="flex items-center gap-2">
                                   <button onClick={() => onNotDelivered(item.id)} className="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"><XCircle className="w-4 h-4" /></button>
@@ -350,15 +284,12 @@ const PantryView = ({
                   </div>
               </div>
           )}
-
-          {/* SECTION 2: REGULAR CATEGORIES */}
+          {/* REGULAR CATEGORIES */}
           {sortedCategories.map(category => (
               <div key={category}>
                   <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">{category}</h3>
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
-                      {groupedItems[category]
-                          .sort((a, b) => a.name.localeCompare(b.name))
-                          .map(item => {
+                      {groupedItems[category].sort((a, b) => a.name.localeCompare(b.name)).map(item => {
                               const isInCart = cart.find(c => c.id === item.id);
                               return (
                                   <div key={item.id} className={`p-4 flex items-center justify-between transition-colors ${item.isOverdue ? 'bg-red-50' : 'bg-white'}`}>
@@ -368,10 +299,7 @@ const PantryView = ({
                                       </div>
                                       <div>
                                       <div className={`text-sm font-bold ${item.isOverdue ? 'text-red-700' : 'text-gray-700'}`}>{item.name}</div>
-                                      <div className={`text-xs flex items-center ${item.isOverdue ? 'text-red-500' : 'text-gray-400'}`}>
-                                          {item.vendor} •
-                                          {item.hasPattern ? <span className="ml-1 font-medium">Last: {item.daysSinceLastOrder}d</span> : <span className="ml-1">Learning... ({item.orderCount} orders)</span>}
-                                      </div>
+                                      <div className={`text-xs flex items-center ${item.isOverdue ? 'text-red-500' : 'text-gray-400'}`}>{item.vendor} • {item.hasPattern ? <span className="ml-1 font-medium">Last: {item.daysSinceLastOrder}d</span> : <span className="ml-1">Learning... ({item.orderCount} orders)</span>}</div>
                                       </div>
                                   </div>
                                   {isInCart ? (
@@ -395,10 +323,9 @@ const PantryView = ({
   );
 };
 
-// 2. Pending Orders Modal (Stable)
+// 2. Pending Orders Modal
 const PendingOrdersModal = ({ items, onCancel, onManualReceive, onNotDelivered }) => {
     const orderedItems = items.filter(i => i.isOrdered);
-
     return (
         <div className="absolute inset-0 bg-black/50 z-[70] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
             <div className="bg-white w-full rounded-2xl p-6 shadow-xl animate-slide-up max-h-[80vh] flex flex-col">
@@ -406,32 +333,16 @@ const PendingOrdersModal = ({ items, onCancel, onManualReceive, onNotDelivered }
                     <h2 className="text-xl font-bold text-gray-800 flex items-center"><Truck className="w-6 h-6 text-blue-600 mr-2"/> Pending Deliveries</h2>
                     <button onClick={onCancel} className="bg-gray-100 p-2 rounded-full"><X className="w-5 h-5 text-gray-600" /></button>
                 </div>
-
                 <div className="overflow-y-auto custom-scrollbar flex-1 space-y-3">
-                    {orderedItems.length === 0 ? (
-                        <p className="text-center text-gray-500 py-8">No items currently on the way.</p>
-                    ) : orderedItems.map(item => (
+                    {orderedItems.length === 0 ? <p className="text-center text-gray-500 py-8">No items currently on the way.</p> : orderedItems.map(item => (
                         <div key={item.id} className="p-4 border border-blue-100 bg-blue-50/30 rounded-xl flex flex-col gap-3">
                             <div className="flex justify-between items-start">
-                                <div>
-                                    <div className="font-bold text-gray-800">{item.name}</div>
-                                    <div className="text-xs text-gray-500">{item.vendor}</div>
-                                </div>
+                                <div><div className="font-bold text-gray-800">{item.name}</div><div className="text-xs text-gray-500">{item.vendor}</div></div>
                                 <div className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded">Ordered</div>
                             </div>
                             <div className="flex gap-2 pt-2 border-t border-blue-100/50">
-                                <button
-                                    onClick={() => onNotDelivered(item.id)}
-                                    className="flex-1 py-2 bg-white border border-gray-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-50"
-                                >
-                                    Not Delivered
-                                </button>
-                                <button
-                                    onClick={() => onManualReceive(item)}
-                                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700"
-                                >
-                                    Confirm Receipt
-                                </button>
+                                <button onClick={() => onNotDelivered(item.id)} className="flex-1 py-2 bg-white border border-gray-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-50">Not Delivered</button>
+                                <button onClick={() => onManualReceive(item)} className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700">Confirm Receipt</button>
                             </div>
                         </div>
                     ))}
@@ -448,41 +359,10 @@ const AddToCartModal = ({ item, config, setConfig, onCancel, onConfirm }) => (
             <p className="text-sm text-gray-500 mb-6">Confirm details for <span className="font-semibold text-gray-900">{item?.name}</span></p>
 
             <div className="space-y-6">
-                <div>
-                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2"><Scale className="w-3 h-3 mr-1" /> Packet Size</label>
-                    <div className="flex gap-3">
-                        <div className="flex-1 relative">
-                            <button onClick={() => setConfig({...config, packetSize: Math.max(0.5, config.packetSize - 0.5)})} className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">-</button>
-                            <input type="number" value={config.packetSize} onChange={(e) => setConfig({...config, packetSize: parseFloat(e.target.value) || 0})} className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"/>
-                            <button onClick={() => setConfig({...config, packetSize: config.packetSize + 0.5})} className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">+</button>
-                        </div>
-                        <div className="w-1/3">
-                            <select value={config.unit} onChange={(e) => setConfig({...config, unit: e.target.value})} className="w-full h-full p-3 font-medium bg-gray-50 rounded-xl border border-gray-200 text-center appearance-none">{UNITS.map(u => <option key={u} value={u}>{u}</option>)}</select>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2"><Package className="w-3 h-3 mr-1" /> Number of Packs</label>
-                    <div className="flex gap-3 items-center">
-                        <div className="flex-1 relative">
-                            <button onClick={() => setConfig({...config, packCount: Math.max(1, config.packCount - 1)})} className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">-</button>
-                            <input type="number" value={config.packCount} onChange={(e) => setConfig({...config, packCount: parseInt(e.target.value) || 1})} className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"/>
-                            <button onClick={() => setConfig({...config, packCount: config.packCount + 1})} className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">+</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2"><Store className="w-3 h-3 mr-1" /> Select Store</label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {(item?.availableVendors || VENDORS).map(v => (
-                            <button key={v} onClick={() => setConfig({...config, vendor: v})} className={`p-3 rounded-xl border text-sm font-medium transition-all text-left flex items-center justify-between ${config.vendor === v ? 'border-indigo-600 bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}>{v} {config.vendor === v && <Check className="w-4 h-4" />}</button>
-                        ))}
-                    </div>
-                </div>
+                <div><label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2"><Scale className="w-3 h-3 mr-1" /> Packet Size</label><div className="flex gap-3"><div className="flex-1 relative"><button onClick={() => setConfig({...config, packetSize: Math.max(0.5, config.packetSize - 0.5)})} className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">-</button><input type="number" value={config.packetSize} onChange={(e) => setConfig({...config, packetSize: parseFloat(e.target.value) || 0})} className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"/><button onClick={() => setConfig({...config, packetSize: config.packetSize + 0.5})} className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">+</button></div><div className="w-1/3"><select value={config.unit} onChange={(e) => setConfig({...config, unit: e.target.value})} className="w-full h-full p-3 font-medium bg-gray-50 rounded-xl border border-gray-200 text-center appearance-none">{UNITS.map(u => <option key={u} value={u}>{u}</option>)}</select></div></div></div>
+                <div><label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2"><Package className="w-3 h-3 mr-1" /> Number of Packs</label><div className="flex gap-3 items-center"><div className="flex-1 relative"><button onClick={() => setConfig({...config, packCount: Math.max(1, config.packCount - 1)})} className="absolute left-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">-</button><input type="number" value={config.packCount} onChange={(e) => setConfig({...config, packCount: parseInt(e.target.value) || 1})} className="w-full p-3 text-center font-bold text-gray-800 bg-gray-50 rounded-xl border border-gray-200"/><button onClick={() => setConfig({...config, packCount: config.packCount + 1})} className="absolute right-2 top-2 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">+</button></div></div></div>
+                <div><label className="flex items-center text-xs font-bold text-gray-500 uppercase mb-2"><Store className="w-3 h-3 mr-1" /> Select Store</label><div className="grid grid-cols-2 gap-2">{(item?.availableVendors || VENDORS).map(v => (<button key={v} onClick={() => setConfig({...config, vendor: v})} className={`p-3 rounded-xl border text-sm font-medium transition-all text-left flex items-center justify-between ${config.vendor === v ? 'border-indigo-600 bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}>{v} {config.vendor === v && <Check className="w-4 h-4" />}</button>))}</div></div>
             </div>
-
             <div className="flex gap-3 mt-8">
                 <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">Cancel</button>
                 <button onClick={onConfirm} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors">Add to List</button>
@@ -594,7 +474,7 @@ export default function GroceryApp() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddToCartModalOpen, setIsAddToCartModalOpen] = useState(false);
   const [itemToAdd, setItemToAdd] = useState(null);
-  const [isPendingOrdersModalOpen, setIsPendingOrdersModalOpen] = useState(false); // NEW STATE
+  const [isPendingOrdersModalOpen, setIsPendingOrdersModalOpen] = useState(false);
 
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
   const [itemToReceive, setItemToReceive] = useState(null);
@@ -623,9 +503,9 @@ export default function GroceryApp() {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          // REMOVED auto-anonymous login to force explicit login/signup
         }
-        // REMOVED: Automatic anonymous login. Now we wait for user action in AuthView.
-        // We will use onAuthStateChanged to determine if we show AuthView or App.
       } catch (e) {
         console.error("Auth Error:", e);
         setDbError(`Authentication Failed: ${e.message}`);
@@ -726,7 +606,6 @@ export default function GroceryApp() {
     };
   };
 
-  // --- MAIN PROCESSED ITEMS LOGIC ---
   const processedItems = useMemo(() => {
     const today = new Date();
     const enrichedItems = items.map(item => {
@@ -880,10 +759,32 @@ export default function GroceryApp() {
       setIsAdminOpen(false);
   };
 
+  // --- ADDED: Export Functionality ---
+  const handleExportSeed = () => {
+    // Filter only relevant fields for seed data
+    const cleanItems = items.map(item => ({
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      vendor: item.vendor,
+      availableVendors: item.availableVendors || GENERIC_GROCERY_APPS,
+      frequencyDays: item.frequencyDays,
+      avgDailyConsumption: item.avgDailyConsumption,
+      lastQuantity: item.lastQuantity || null,
+      lastOrdered: null, // Strip personal dates
+      orderCount: 0,
+      quantity: item.quantity,
+      unit: item.unit
+    }));
+
+    const jsonString = JSON.stringify(cleanItems, null, 2);
+    navigator.clipboard.writeText(jsonString);
+    alert("Data copied to clipboard! Paste this into the SEED_ITEMS array in your code.");
+  };
+
   const handleLogout = async () => {
       try {
         await signOut(auth);
-        // User state will be updated by onAuthStateChanged
       } catch(e) {
         console.error("Sign out error", e);
       }
@@ -962,6 +863,7 @@ export default function GroceryApp() {
               </div>
               <p className="text-xs text-gray-400 mb-3">Sync local code changes to cloud DB.</p>
               <button onClick={handleBulkSync} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg mb-3">Sync Master List</button>
+              <button onClick={handleExportSeed} className="w-full bg-gray-600 hover:bg-gray-500 text-white text-xs font-bold py-2 rounded-lg mb-3 flex items-center justify-center"><FileJson className="w-4 h-4 mr-2" /> Export Data for Code</button>
 
               <div className="border-t border-gray-600 my-2"></div>
               <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center">
