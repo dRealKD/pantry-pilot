@@ -62,15 +62,14 @@ import {
 
 // --- CONFIGURATION ---
 const VENDORS = ['BigBasket', 'Swiggy Instamart', 'Meatigo', 'Zepto', 'Blinkit', 'Amazon Fresh', 'Blue Tokai', 'Amul'];
-const UNITS = ['Kg', 'gm', 'L', 'ml', 'pcs', 'packet', 'loaf', 'bunch', 'bottles'];
-const GENERIC_GROCERY_APPS = ['BigBasket', 'Swiggy Instamart', 'Meatigo', 'Zepto', 'Blinkit', 'Amazon Fresh'];
+const UNITS = ['kg(s)', 'gm(s)', 'ltr', 'ml', 'pcs', 'pack', 'loaf', 'bunch', 'bottles'];
+const GENERIC_GROCERY_APPS = ['BigBasket', 'Swiggy Instamart', 'Zepto', 'Blinkit', 'Amazon Fresh'];
 const CATEGORIES = ['Vegetables', 'Fruits', 'Dairy', 'Meat', 'Bakery', 'Grains', 'Cooking', 'Beverages', 'Household'];
 
-// --- MASTER LIST ---
+// --- MASTER LIST (Updated with User Data) ---
 const SEED_ITEMS = [
   { id: 'custom_1764252000001', name: 'Chicken Bites (Boneless)', category: 'Meat', vendor: 'Meatigo', availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 250, unit: 'g' },
   { id: "custom_1764251870502", name: "Olive Oil", category: "Cooking", vendor: "BigBasket", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 1, unit: "pcs" },
-  { id: "custom_1764252000001", name: "Chicken Bites (Boneless)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 250, unit: "g" },
   { id: "custom_1764252000002", name: "Chicken Soup Pieces (Frozen)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 500, unit: "g" },
   { id: "custom_1764252000003", name: "Chicken Mince", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
   { id: "custom_1764252000004", name: "Chicken Curry Cut (Skinless)", category: "Meat", vendor: "Meatigo", availableVendors: GENERIC_GROCERY_APPS, frequencyDays: null, avgDailyConsumption: null, lastQuantity: null, lastOrdered: null, orderCount: 0, quantity: 450, unit: "g" },
@@ -250,7 +249,134 @@ const AuthView = () => {
   );
 };
 
-// --- STABLE COMPONENTS ---
+// --- STABLE COMPONENTS (EXTRACTED) ---
+
+const DashboardView = ({ items, suggestions, cart, onCheckout, onAddToCart, onRemoveFromCart, onSkip }) => (
+    <div className="space-y-6 pb-20">
+      <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-lg flex justify-between items-center">
+          <span className="text-xs text-indigo-800 font-medium">Demo Control:</span>
+          <button onClick={() => onCheckout('Swiggy Instamart')} className="text-xs bg-white border border-indigo-200 text-indigo-600 px-3 py-1 rounded shadow-sm">
+            Simulate "Place Order"
+          </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-2xl border border-emerald-200">
+          <div className="text-emerald-800 text-sm font-semibold mb-1">Smart Stock</div>
+          <div className="text-2xl font-bold text-emerald-900">
+             {items.filter(i => i.avgDailyConsumption !== null).length}
+          </div>
+          <div className="text-xs text-emerald-700 mt-1">Patterns learned</div>
+        </div>
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-2xl border border-amber-200">
+          <div className="text-amber-800 text-sm font-semibold mb-1">To Order</div>
+          <div className="text-2xl font-bold text-amber-900">{suggestions.length}</div>
+          <div className="text-xs text-amber-700 mt-1">Predictive suggestions</div>
+        </div>
+      </div>
+
+      {suggestions.length > 0 ? (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2 text-rose-500" />
+            Restock Suggestions
+          </h2>
+          <div className="space-y-3">
+            {suggestions.map(item => {
+              const isInCart = cart.find(c => c.id === item.id);
+              return (
+                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div className="flex-1">
+                    <div className="font-semibold text-gray-800">{item.name}</div>
+                    <div className="text-xs text-gray-500 flex items-center mt-1">
+                        <span className={`w-2 h-2 rounded-full mr-2 ${item.stockStatus === 'Critical' ? 'bg-rose-500' : 'bg-amber-400'}`}></span>
+                        Est. Duration: {item.predictedDuration} days
+                    </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {isInCart ? (
+                             <>
+                                 <div className="text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-lg text-xs font-bold flex items-center">
+                                     <Check className="w-3 h-3 mr-1" /> Added
+                                 </div>
+                                 <button onClick={() => onRemoveFromCart(item.id)} className="bg-gray-200 p-1.5 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50"><Trash2 className="w-4 h-4" /></button>
+                             </>
+                        ) : (
+                            <button onClick={() => onAddToCart(item)} className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center"><Plus className="w-4 h-4 mr-1" /> Add</button>
+                        )}
+                        {!isInCart && <button onClick={() => onSkip(item.id)} className="bg-gray-100 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50"><X className="w-4 h-4" /></button>}
+                    </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
+            <BrainCircuit className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+            <h3 className="text-gray-800 font-bold">AI is Learning</h3>
+            <p className="text-xs text-gray-400 mt-1">Order items from "My Pantry" to start establishing consumption patterns.</p>
+        </div>
+      )}
+    </div>
+);
+
+const CartView = ({ cart, onRemoveFromCart, onCheckout }) => {
+    // Safety check: ensure cart is an array
+    const safeCart = Array.isArray(cart) ? cart : [];
+
+    const groupedCart = safeCart.reduce((acc, item) => {
+      const v = item.vendor || 'Other';
+      (acc[v] = acc[v] || []).push(item);
+      return acc;
+    }, {});
+
+    return (
+      <div className="space-y-6 pb-20">
+        <h1 className="text-2xl font-bold text-gray-900 px-1">Shopping Lists</h1>
+        {safeCart.length === 0 ? (
+          <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 font-medium">Your list is empty.</p>
+            {/* Note: Navigation logic is in parent, so we just show text */}
+            <p className="text-sm text-indigo-600 mt-2 font-semibold">Browse Pantry to Add</p>
+          </div>
+        ) : (
+          Object.entries(groupedCart).map(([vendor, vendorItems]) => (
+            <div key={vendor} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                <div className="flex items-center">
+                   <h3 className="font-bold text-gray-800">{vendor}</h3>
+                   <span className="ml-2 bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{vendorItems.length} items</span>
+                </div>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {vendorItems.map(item => (
+                  <div key={item.id} className="p-4 flex justify-between items-center">
+                    <div>
+                        <div className="text-gray-800 font-medium">{item.name}</div>
+                        <div className="text-xs text-gray-400 font-medium mt-0.5 flex items-center">
+                            {item.packCount > 1 ? <span className="text-indigo-600 font-bold bg-indigo-50 px-1 rounded mr-1">{item.packCount} x</span> : null}
+                            {item.packetSize} {item.unit}
+                        </div>
+                    </div>
+                    <button onClick={() => onRemoveFromCart(item.id)} className="text-gray-300 hover:text-red-500 p-2"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 bg-gray-50 border-t border-gray-100">
+                <button onClick={() => onCheckout(vendor)} className="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-100 transition-colors flex justify-center items-center shadow-sm">
+                  <span className="mr-2">Copy List & WhatsApp</span>
+                  <div className="flex space-x-1"><Share2 className="w-4 h-4" /><ChevronRight className="w-4 h-4" /></div>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    );
+};
+
 const PantryView = ({ items, cart, isLoading, dbError, hasNewItems, onAddCustom, onSync, onAddToCart, onRemoveFromCart, onManualReceive, onNotDelivered }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const filteredItems = items.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -297,7 +423,6 @@ const PantryView = ({ items, cart, isLoading, dbError, hasNewItems, onAddCustom,
           </div>
       ) : (
       <div className="space-y-6">
-          {/* ORDERED ITEMS */}
           {orderedItems.length > 0 && (
               <div>
                   <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2 ml-1 flex items-center"><Clock className="w-4 h-4 mr-1" /> On the Way</h3>
@@ -317,7 +442,6 @@ const PantryView = ({ items, cart, isLoading, dbError, hasNewItems, onAddCustom,
                   </div>
               </div>
           )}
-          {/* REGULAR CATEGORIES */}
           {sortedCategories.map(category => (
               <div key={category}>
                   <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">{category}</h3>
@@ -356,7 +480,6 @@ const PantryView = ({ items, cart, isLoading, dbError, hasNewItems, onAddCustom,
   );
 };
 
-// 2. Pending Orders Modal
 const PendingOrdersModal = ({ items, onCancel, onManualReceive, onNotDelivered }) => {
     const orderedItems = items.filter(i => i.isOrdered);
     return (
@@ -478,19 +601,7 @@ const AddToCartModal = ({ item, config, setConfig, onCancel, onConfirm }) => (
                    <h2 className="text-xl font-bold text-gray-800 mb-1">Receipt Processed</h2>
                    <p className="text-sm text-gray-500 mb-6">We'll update your usage frequency based on this.</p>
                    <div className="space-y-4">
-                       {scannedData.map((data, idx) => (
-                           <div key={idx} className="p-4 rounded-xl border border-gray-200 bg-white">
-                               <div className="flex justify-between items-start mb-2">
-                                   <div className="font-semibold text-gray-800">{data.name}</div>
-                                   <div className="flex items-center text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded">
-                                       <BrainCircuit className="w-3 h-3 mr-1" /> Pattern Updated
-                                   </div>
-                               </div>
-                               <div className="flex items-center space-x-4 text-sm">
-                                   <div className="text-gray-600">Confirmed: <strong>{data.detectedQty} {data.detectedUnit}</strong></div>
-                               </div>
-                           </div>
-                       ))}
+                       <p className="text-gray-500 text-center">Demo: No items scanned.</p>
                    </div>
                </div>
                <div className="p-4 bg-white border-t border-gray-200">
@@ -656,6 +767,7 @@ export default function GroceryApp() {
     };
   };
 
+  // --- MAIN PROCESSED ITEMS LOGIC ---
   const processedItems = useMemo(() => {
     const today = new Date();
     const enrichedItems = items.map(item => {
@@ -863,7 +975,7 @@ export default function GroceryApp() {
       </div>
 
       <div className="p-4 h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar">
-        {activeTab === 'dashboard' && <DashboardView />}
+        {activeTab === 'dashboard' && <DashboardView items={processedItems} suggestions={suggestions} cart={cart} onCheckout={handleCheckout} onAddToCart={initiateAddToCart} onRemoveFromCart={removeFromCart} onSkip={handleSkipCycle} />}
         {activeTab === 'pantry' && <PantryView
             items={processedItems}
             cart={cart} isLoading={isLoading} dbError={dbError} hasNewItems={hasNewItems}
@@ -874,7 +986,7 @@ export default function GroceryApp() {
             onManualReceive={initiateManualReceive}
             onNotDelivered={handleNotDelivered}
         />}
-        {activeTab === 'cart' && <CartView />}
+        {activeTab === 'cart' && <CartView cart={cart} onRemoveFromCart={removeFromCart} onCheckout={handleCheckout} />}
       </div>
 
       {showNotification && (
